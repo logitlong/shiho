@@ -587,3 +587,20 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
 .set-in { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
 .set-pop .small { font-size: 11.5px; margin-top: 2px; }
 .set-act { display: flex; align-items: center; gap: 14px; margin: 14px 0 6px; }
+.hm i.pre { background: none; }
+.hm i.fut, .heat-legend i.fut { background: none; box-shadow: inset 0 0 0 1px var(--line); }
+.hm i.exam, .heat-legend i.exam { background: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.hm-key { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; }
+.hm-key i { width: 13px; height: 13px; display: inline-block; }
+
+/* 专注模式（T）：只留视频和字幕，左视频、右字幕，各占满一屏 */
+.study.focus:not(.audio) { max-width: none; }
+.study.focus:not(.audio) .left { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 28px; }
+.study.focus:not(.audio) .player-area { grid-column: 1; grid-row: 1 / span 2; }
+.study.focus:not(.audio) .subs-head { grid-column: 2; grid-row: 1; margin-top: 0; }
+.study.focus:not(.audio) .subs { grid-column: 2; grid-row: 2; height: auto; min-height: 0; contain: size; font-size: 18px; line-height: 2; padding-right: 6px; }
+.fs .study.focus:not(.audio) { max-width: none; }
+@media (max-width: 900px) {
+  .study.focus:not(.audio) .left { display: block; }
+  .study.focus:not(.audio) .subs { contain: none; height: 45vh; }
+}

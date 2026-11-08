@@ -1,4 +1,4 @@
-import { loadLawData } from "./store.js?v=cf31f9af4d";
+import { loadLawData } from "./store.js?v=30f4a3e87e";
 // 条文弹窗：笔记、卡片、判例里的「憲法20条3項」「民訴法247条」「94条2項」点一下看原文
 // 原文来自 e-Gov 法令 API（tools/laws.py → data/laws/<法令ID>.json），是取得当时的现行法
 const LAW_ID = {

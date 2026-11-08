@@ -1,7 +1,7 @@
 // 讲次页以外的页面：答案练习（题目 / 作答 / 批改）、全文搜索、判例索引
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=cf31f9af4d";
-import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=cf31f9af4d";
-import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=cf31f9af4d";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=30f4a3e87e";
+import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=30f4a3e87e";
+import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=30f4a3e87e";
 
 let X; // app.js 传进来的共用工具：app, $, esc, fmt, mdHtml, toast, pref, save, state(), inv(), onLeave
 export const initPages = (ctx) => (X = ctx);

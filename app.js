@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=cf31f9af4d";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=cf31f9af4d";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=30f4a3e87e";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=30f4a3e87e";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=cf31f9af4d";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=cf31f9af4d";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=30f4a3e87e";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=30f4a3e87e";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -263,31 +263,43 @@ function streakDays() {
   while (S.days[dk(d)] > 0) { n++; d.setDate(d.getDate() - 1); }
   return n;
 }
-// 学习记录：最近一年的热力图（每格一天，颜色越深学得越久），铺满整行宽度
+// 学习记录：从第一次学习那天开始，一直排到考试那天（未来的格子是空的，慢慢填满）
 function heatHtml() {
-  const end = new Date(); end.setHours(0, 0, 0, 0);
-  const start = new Date(end); start.setDate(start.getDate() - 7 * 52 - end.getDay());
+  const dkey = (d) => d.toLocaleDateString("sv-SE");
+  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+  const studied = Object.keys(S.days).filter((k) => S.days[k] > 0).sort();
+  const first = studied.length ? new Date(studied[0] + "T00:00") : new Date(today0);
+  const exam = new Date(cfg().exam + "T00:00");
+  const end = exam > today0 ? exam : today0;
+  const start = new Date(first); start.setDate(start.getDate() - start.getDay());
   const out = [];
   let total = 0, active = 0, wk = 0, lastM = -1, week = 0;
-  const wkStart = new Date(end); wkStart.setDate(end.getDate() - end.getDay());
+  const wkStart = new Date(today0); wkStart.setDate(today0.getDate() - today0.getDay());
   for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const dow = d.getDay();
     if (dow === 0 && d > start) wk++;
-    if (dow === 0 && d.getMonth() !== lastM) { out.push(`<span class="hm-m" style="grid-column:${wk + 2}">${d.getMonth() + 1}月</span>`); lastM = d.getMonth(); }
-    const k = d.toLocaleDateString("sv-SE"), v = S.days[k] || 0;
+    if (d.getMonth() !== lastM && (dow === 0 || +d === +start)) {
+      const yr = lastM === -1 || d.getMonth() === 0 ? `${d.getFullYear()}年` : "";
+      out.push(`<span class="hm-m" style="grid-column:${wk + 2}">${yr}${d.getMonth() + 1}月</span>`); lastM = d.getMonth();
+    }
+    const k = dkey(d), v = S.days[k] || 0;
+    const before = d < first, fut = d > today0;
     total += v; if (v > 0) active++;
-    if (d >= wkStart) week += v;
+    if (d >= wkStart && !fut) week += v;
     const lv = v <= 0 ? 0 : v < 900 ? 1 : v < 2700 ? 2 : v < 5400 ? 3 : 4;
-    out.push(`<i class="l${lv}${+d === +end ? " now" : ""}" style="grid-area:${dow + 2}/${wk + 2}" title="${k}　${Math.round(v / 60)} 分钟"></i>`);
+    const cls = before ? "pre" : fut ? "fut" : "l" + lv;
+    const tip = +d === +exam ? `${k}　考试` : fut ? k : `${k}　${Math.round(v / 60)} 分钟`;
+    out.push(`<i class="${cls}${+d === +today0 ? " now" : ""}${+d === +exam ? " exam" : ""}" style="grid-area:${dow + 2}/${wk + 2}" title="${tip}"></i>`);
   }
+  const since = Math.round((today0 - first) / 864e5) + 1;
   return `<section class="hm-sec">
-    <div class="hm-head"><div class="section-t">学习记录</div>
-      <div class="hm-stat"><span><b>${Math.round(week / 60)}</b> 分钟<small>本周</small></span><span><b>${active}</b> 天<small>最近一年学过</small></span><span><b>${hrs(total)}</b> 小时<small>最近一年合计</small></span></div></div>
+    <div class="hm-head"><div class="section-t">学习记录<span class="muted small" style="font-weight:400;letter-spacing:0;margin-left:12px">${first.toLocaleDateString("sv-SE")} 开始 → ${exam > today0 ? `${cfg().exam} 考试` : "今天"}</span></div>
+      <div class="hm-stat"><span><b>${Math.round(week / 60)}</b> 分钟<small>本周</small></span><span><b>${active}</b> / ${since} 天<small>开始以来学过的天数</small></span><span><b>${hrs(total)}</b> 小时<small>累计</small></span>${days > 0 ? `<span><b>${days}</b> 天<small>离考试</small></span>` : ""}</div></div>
     <div class="hm" style="grid-template-columns:18px repeat(${wk + 1}, minmax(0, 1fr))">
       <span class="hm-w" style="grid-area:3/1">一</span><span class="hm-w" style="grid-area:5/1">三</span><span class="hm-w" style="grid-area:7/1">五</span>
       ${out.join("")}
     </div>
-    <div class="heat-legend">少 <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> 多</div>
+    <div class="heat-legend"><span class="hm-key"><i class="fut"></i> 还没到</span><span class="hm-key"><i class="exam"></i> 考试</span><span style="margin-left:14px">少</span> <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> 多</div>
   </section>`;
 }
 
