@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=4830679264";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=4830679264";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=cf31f9af4d";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=cf31f9af4d";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=4830679264";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=4830679264";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=cf31f9af4d";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=cf31f9af4d";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -77,9 +77,69 @@ $("#themeBtn").onclick = () => {
   renderThemeBtn();
 };
 renderThemeBtn();
+// 字号：整页一起缩放（文字、间距、视频一起变），每台设备单独记住
+const FZ = [85, 90, 100, 110, 120, 135, 150];
+function applyFz(v) {
+  v = FZ.includes(v) ? v : 100;
+  document.documentElement.style.zoom = v === 100 ? "" : v / 100;
+  pref.set("fz", v);
+  const p = $(".fz-pop"); if (p) p.querySelector("b").textContent = v + "%";
+  return v;
+}
+let fz = applyFz(pref.get("fz", 100));
+$("#fzBtn").onclick = (e) => {
+  e.stopPropagation();
+  let p = $(".fz-pop");
+  if (p) return p.remove();
+  p = document.createElement("div"); p.className = "fz-pop";
+  p.innerHTML = `<div class="muted small">字号</div>
+    <div class="fz-row"><button data-d="-1" title="小一点">A−</button><b>${fz}%</b><button data-d="1" title="大一点">A+</button></div>
+    <button class="link" data-reset>恢复默认</button>`;
+  p.onclick = (ev) => {
+    ev.stopPropagation();
+    const b = ev.target.closest("button"); if (!b) return;
+    fz = applyFz(b.dataset.reset != null ? 100 : FZ[Math.max(0, Math.min(FZ.length - 1, FZ.indexOf(fz) + +b.dataset.d))]);
+  };
+  $(".fz-wrap").appendChild(p);
+};
+document.addEventListener("click", () => $(".fz-pop")?.remove());
 // 筑波法科大学院 既修者 笔试，大约 2027 年 9 月（正式日期以招生简章为准）
-const days = Math.ceil((new Date("2027-09-01") - new Date()) / 864e5);
-$("#goal").textContent = days > 0 ? `距入试 ${days} 天` : "";
+// 设置（右上角齿轮）：考试日期、每日目标（0 = 按剩余视频自动算）、最后留给复习的天数
+const cfg = () => ({ exam: pref.get("exam", "2027-09-01"), daily: +pref.get("daily", 0) || 0, reserve: Math.max(0, +pref.get("reserve", 60) || 0) });
+let days;
+function updateDays() {
+  days = Math.ceil((new Date(cfg().exam + "T00:00") - new Date()) / 864e5);
+  $("#goal").textContent = days > 0 ? `距入试 ${days} 天` : days === 0 ? "今天考试" : "";
+}
+updateDays();
+$("#setBtn").onclick = (e) => {
+  e.stopPropagation();
+  let p = $(".set-pop");
+  if (p) return p.remove();
+  $(".fz-pop")?.remove();
+  const c = cfg();
+  p = document.createElement("div"); p.className = "fz-pop set-pop";
+  p.innerHTML = `<div class="set-t">设置</div>
+    <label>考试日期<input type="date" name="exam" value="${c.exam}"></label>
+    <label>每天学习目标<span class="set-in"><input type="number" name="daily" min="0" step="10" value="${c.daily || ""}" placeholder="自动">分钟</span></label>
+    <div class="muted small">留空 = 自动：剩余视频时长 ÷ 剩下的天数</div>
+    <label>最后留给复习<span class="set-in"><input type="number" name="reserve" min="0" step="10" value="${c.reserve}">天</span></label>
+    <div class="muted small">这段时间不排新视频，只做题和复习</div>
+    <div class="set-act"><button class="act" data-save>保存</button><button class="link" data-close>取消</button></div>
+    <div class="muted small">只保存在这台设备上</div>`;
+  p.onclick = (ev) => {
+    ev.stopPropagation();
+    if (ev.target.closest("[data-close]")) return p.remove();
+    if (!ev.target.closest("[data-save]")) return;
+    const v = (n) => p.querySelector(`[name=${n}]`).value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v("exam"))) pref.set("exam", v("exam"));
+    pref.set("daily", Math.max(0, Math.round(+v("daily") || 0)));
+    pref.set("reserve", Math.max(0, Math.round(+v("reserve") || 0)));
+    p.remove(); updateDays(); route(); toast("设置已保存");
+  };
+  $("#setBtn").parentElement.appendChild(p);
+};
+document.addEventListener("click", (e) => { if (!e.target.closest(".set-pop")) $(".set-pop")?.remove(); });
 
 // ---------- 快捷键说明 ----------
 const KEYS = [
@@ -142,58 +202,93 @@ const hrs = (sec) => (sec / 3600).toFixed(sec < 36000 ? 1 : 0);
 function viewHome() {
   const last = Object.entries(S.lectures).filter(([id, v]) => v.at && LECTURE_BY_ID[id]).sort((a, b) => b[1].at - a[1].at)[0];
   const ll = last && LECTURE_BY_ID[last[0]];
+  // 上次那一讲看完了的话，推荐同一科目的下一讲
+  const nextLec = ll && S.lectures[ll.id]?.done ? SUBJECT_BY_ID[ll.subject].lectures.find((l) => l.n > ll.n && !S.lectures[l.id]?.done) : null;
   const due = dueCards().length;
+  const wrong = Object.values(S.quiz || {}).filter((v) => v.last === false).length;
+  // 今日计划：剩余视频时长 ÷ 天数（最后 60 天留给做题复习）
+  const left = SUBJECTS.reduce((a, s) => a + subjStat(s).left, 0);
+  const c = cfg();
+  const studyDays = Math.max(1, days - c.reserve);
+  const auto = Math.max(1, Math.round(left / studyDays / 60));
+  const goal = c.daily || auto;
+  const todayMin = Math.round((S.days[today()] || 0) / 60);
+  const pct = Math.min(100, (todayMin / goal) * 100);
+  const total = SUBJECTS.reduce((a, s) => a + s.dur, 0);
+  const doneAll = SUBJECTS.reduce((a, s) => a + subjStat(s).done, 0), lecAll = SUBJECTS.reduce((a, s) => a + s.lectures.length, 0);
+  const todo = [
+    ll && !S.lectures[ll.id]?.done ? { href: `#/l/${ll.id}`, k: "接着看", t: `${SUBJECT_BY_ID[ll.subject].title}　第${ll.n}講　${ll.title}`, m: `看到 ${fmt(last[1].pos)}` } : null,
+    nextLec ? { href: `#/l/${nextLec.id}`, k: "下一讲", t: `${SUBJECT_BY_ID[nextLec.subject].title}　第${nextLec.n}講　${nextLec.title}`, m: `${Math.round(nextLec.dur / 60)} 分钟` } : null,
+    !ll ? { href: `#/l/${SUBJECTS[0].lectures[0].id}`, k: "开始", t: `${SUBJECTS[0].title}　第1講　${SUBJECTS[0].lectures[0].title}`, m: "从憲法开始" } : null,
+    due ? { href: "#/review", k: "复习", t: `${due} 张论证卡片到期`, m: "先清掉再看新的" } : null,
+    wrong ? { href: "#/review", k: "错题", t: `${wrong} 道 ○× 上次答错`, m: "" } : null,
+  ].filter(Boolean);
   app.innerHTML = `
     ${!pref.get("guideSeen", false) ? `<div class="resume"><span>第一次用？先花 5 分钟看看每个功能怎么用、一天怎么学。</span><a class="act" href="#/guide">打开学习指引</a></div>` : ""}
-    ${ll ? `<div class="resume"><span class="muted small">上次</span>
-      <b>${esc(SUBJECT_BY_ID[ll.subject].title)}　第${ll.n}講　${esc(ll.title)}</b>
-      <span class="muted small">${fmt(last[1].pos)}</span>
-      <a class="act" href="#/l/${ll.id}">接着看</a></div>` : ""}
-    ${due ? `<div class="resume"><span>今天有 ${due} 张论证卡片到期</span><a class="act" href="#/review">去复习</a></div>` : ""}
-    <div class="section-t">入试科目</div>
-    <table class="subj-table">
+    <section class="today">
+      <div class="today-goal">
+        <div class="section-t">今天</div>
+        <div class="tg-num"><b>${todayMin}</b><span>/ ${goal} 分钟</span></div>
+        <div class="tg-bar"><i style="width:${pct}%"></i></div>
+        <div class="tg-sub">${todayMin >= goal ? "今天的目标完成了" : `还差 ${goal - todayMin} 分钟（1.5 倍速约 ${Math.round((goal - todayMin) / 1.5)} 分钟）`}　·　连续学习 ${streakDays()} 天</div>
+        <div class="tg-note">${c.daily ? `自己设定的目标。按剩余视频平均要每天 ${auto} 分钟` : `每天 ${goal} 分钟 = 剩余视频 ${hrs(left)} 小时 ÷ ${studyDays} 天`}（离入试 ${days} 天，最后 ${c.reserve} 天留给做题和复习）　<a class="link" href="javascript:void 0" onclick="event.stopPropagation();document.getElementById('setBtn').click()">修改</a></div>
+      </div>
+      <div class="today-todo">
+        <div class="section-t">接下来</div>
+        ${todo.map((x) => `<a class="todo" href="${x.href}"><span class="k">${x.k}</span><span class="t">${esc(x.t)}</span><span class="m">${esc(x.m)}</span><span class="go">→</span></a>`).join("")}
+      </div>
+    </section>
+
+    ${heatHtml()}
+
+    <div class="section-t">入试科目<span class="muted small" style="font-weight:400;letter-spacing:0;margin-left:12px">学完 ${doneAll} / ${lecAll} 講 · 全部按原速约 ${hrs(total)} 小时（1.5 倍速约 ${hrs(total / 1.5)} 小时）</span></div>
+    <div class="subj-list">
       ${SUBJECTS.map((s) => {
         const st = subjStat(s);
-        const pct = st.total ? (st.done / st.total) * 100 : 0;
-        return `<tr><td class="nm"><a href="#/s/${s.id}">${s.title}</a></td>
-             <td><div class="meter"><i style="width:${pct}%"></i></div></td>
-             <td class="num">${st.done} / ${st.total} 講</td>
-             <td class="num">剩 ${hrs(st.left)} 小时</td></tr>`;
+        const p = st.total ? (st.done / st.total) * 100 : 0;
+        return `<a class="subj-row" href="#/s/${s.id}">
+          <span class="nm">${s.title}</span>
+          <span class="meter"><i style="width:${p}%"></i></span>
+          <span class="num">${st.done} / ${st.total} 講</span>
+          <span class="num">剩 ${hrs(st.left)} 小时</span>
+          <span class="go">→</span></a>`;
       }).join("")}
-    </table>
-    <p class="muted small">全部 ${SUBJECTS.reduce((a, s) => a + s.lectures.length, 0)} 講，按原速约 ${hrs(SUBJECTS.reduce((a, s) => a + s.dur, 0))} 小时；1.5 倍速约 ${hrs(SUBJECTS.reduce((a, s) => a + s.dur, 0) / 1.5)} 小时。</p>
-    ${planHtml()}`;
+    </div>`;
 }
-// 每天要看多少：剩余视频时长 ÷ 离入试的天数（留出最后 60 天专门做题、复习）
-function planHtml() {
-  const left = SUBJECTS.reduce((a, s) => a + subjStat(s).left, 0);
-  const studyDays = Math.max(1, days - 60);
-  const perDay = left / studyDays;
-  const todaySec = S.days[today()] || 0;
-  // 热力图：最近 26 周
+function streakDays() {
+  const dk = (d) => d.toLocaleDateString("sv-SE");
+  let n = 0;
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  if (!(S.days[dk(d)] > 0)) d.setDate(d.getDate() - 1);
+  while (S.days[dk(d)] > 0) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+// 学习记录：最近一年的热力图（每格一天，颜色越深学得越久），铺满整行宽度
+function heatHtml() {
   const end = new Date(); end.setHours(0, 0, 0, 0);
-  const start = new Date(end); start.setDate(start.getDate() - 7 * 25 - end.getDay());
-  const cells = [];
-  let total = 0, active = 0;
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+  const start = new Date(end); start.setDate(start.getDate() - 7 * 52 - end.getDay());
+  const out = [];
+  let total = 0, active = 0, wk = 0, lastM = -1, week = 0;
+  const wkStart = new Date(end); wkStart.setDate(end.getDate() - end.getDay());
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay();
+    if (dow === 0 && d > start) wk++;
+    if (dow === 0 && d.getMonth() !== lastM) { out.push(`<span class="hm-m" style="grid-column:${wk + 2}">${d.getMonth() + 1}月</span>`); lastM = d.getMonth(); }
     const k = d.toLocaleDateString("sv-SE"), v = S.days[k] || 0;
     total += v; if (v > 0) active++;
+    if (d >= wkStart) week += v;
     const lv = v <= 0 ? 0 : v < 900 ? 1 : v < 2700 ? 2 : v < 5400 ? 3 : 4;
-    cells.push(`<i class="l${lv}" title="${k}　${Math.round(v / 60)} 分钟"></i>`);
+    out.push(`<i class="l${lv}${+d === +end ? " now" : ""}" style="grid-area:${dow + 2}/${wk + 2}" title="${k}　${Math.round(v / 60)} 分钟"></i>`);
   }
-  // 连续天数（今天还没学的话从昨天算起）
-  const dk = (d) => d.toLocaleDateString("sv-SE");
-  let streak = 0;
-  const d = new Date(end);
-  if (!(S.days[dk(d)] > 0)) d.setDate(d.getDate() - 1);
-  while (S.days[dk(d)] > 0) { streak++; d.setDate(d.getDate() - 1); }
-  return `<div class="section-t">每日计划</div>
-    <div class="plan">
-      <div><b>${Math.round(perDay / 60)}</b> 分钟 / 天<span class="muted small">原速；1.5 倍速约 ${Math.round(perDay / 90)} 分钟。按剩余 ${hrs(left)} 小时 ÷ ${studyDays} 天（最后 60 天留给做题复习）</span></div>
-      <div><b>${Math.round(todaySec / 60)}</b> 分钟<span class="muted small">今天已学（${todaySec >= perDay ? "达标" : `还差 ${Math.round((perDay - todaySec) / 60)} 分钟`}）</span></div>
-      <div><b>${streak}</b> 天<span class="muted small">连续学习　·　最近 26 周学了 ${active} 天、${hrs(total)} 小时</span></div>
+  return `<section class="hm-sec">
+    <div class="hm-head"><div class="section-t">学习记录</div>
+      <div class="hm-stat"><span><b>${Math.round(week / 60)}</b> 分钟<small>本周</small></span><span><b>${active}</b> 天<small>最近一年学过</small></span><span><b>${hrs(total)}</b> 小时<small>最近一年合计</small></span></div></div>
+    <div class="hm" style="grid-template-columns:18px repeat(${wk + 1}, minmax(0, 1fr))">
+      <span class="hm-w" style="grid-area:3/1">一</span><span class="hm-w" style="grid-area:5/1">三</span><span class="hm-w" style="grid-area:7/1">五</span>
+      ${out.join("")}
     </div>
-    <div class="heat">${cells.join("")}</div>`;
+    <div class="heat-legend">少 <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> 多</div>
+  </section>`;
 }
 
 // ---------- 讲次目录 ----------

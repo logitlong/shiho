@@ -1,7 +1,7 @@
 // 讲次页以外的页面：答案练习（题目 / 作答 / 批改）、全文搜索、判例索引
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=4830679264";
-import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=4830679264";
-import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=4830679264";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=cf31f9af4d";
+import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=cf31f9af4d";
+import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=cf31f9af4d";
 
 let X; // app.js 传进来的共用工具：app, $, esc, fmt, mdHtml, toast, pref, save, state(), inv(), onLeave
 export const initPages = (ctx) => (X = ctx);
@@ -587,7 +587,7 @@ export function viewFav(tab = "qa") {
           <div class="fav-src"><a class="link" href="#/l/${m.lec}/${m.vt ?? ""}/ask">${esc(lecName(m.lec))}${m.vt != null ? "　" + fmt(m.vt) : ""}</a>
             <span class="muted small">${new Date(m.at).toLocaleDateString("sv-SE")}</span>
             <button class="link" data-unfav="${m.lec}|${m.at}">取消收藏</button></div>
-          <div class="md" data-subj="${LECTURE_BY_ID[m.lec].subject}">${mdHtml(m.a || "（没有回答）")}</div></details>`).join("")
+          <div class="md" data-subj="${LECTURE_BY_ID[m.lec]?.subject || ""}">${mdHtml(m.a || "（没有回答）")}</div></details>`).join("")
         || `<div class="empty">还没有。在讲次页「AI 问答」里点 ☆ 收藏。</div>`;
     } else if (tab === "marks") {
       const xs = marks.filter((m) => ok(m.id, m.label || ""));
