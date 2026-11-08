@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=30f4a3e87e";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=30f4a3e87e";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=179618f98f";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=179618f98f";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=30f4a3e87e";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=30f4a3e87e";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=179618f98f";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=179618f98f";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -412,11 +412,15 @@ async function viewLecture(id, startT, startTab) {
             </div>
           </div>
         </div>
+        <div class="fsplit" title="拖动：调整视频和字幕的宽度（双击恢复）"></div>
+        <div class="subs-col">
         <div class="subs-head">
           <input type="search" id="subQ" placeholder="搜索字幕（/）">
           <button class="small muted" data-k="follow" id="followBtn"></button>
         </div>
         <div class="subs" id="subs"><div class="empty">读取中…</div></div>
+        </div>
+        <div class="fdock" id="fdock"><div class="fd-marks" id="fdMarks"></div><div class="fd-ask" id="fdAsk"></div></div>
       </div>
       <div class="right">
         <div class="tabs" id="tabs">${TABS.map(([k, t]) => `<button data-tab="${k}">${t}</button>`).join("")}</div>
@@ -427,7 +431,7 @@ async function viewLecture(id, startT, startTab) {
   cur = { id, lec, prev, next, data: null, idx: -1, loop: -1, tab: TABS.some(([k]) => k === startTab) ? startTab : pref.get("tab", "ja"),
     rate: pref.get("rate", 1), follow: pref.get("follow", true), pausedByNote: false };
   const me = cur;
-  renderDone(); renderRate(); renderFollow(); renderAudioBtn(); renderMarks();
+  renderDone(); renderRate(); renderFollow(); renderAudioBtn(); renderMarks(); initSplit(); renderDock();
 
   const data = await loadLecture(id).catch(() => null);
   if (cur !== me) return;
@@ -531,7 +535,7 @@ function addMark(kind) {
   const r = L(cur.id), t = Math.floor(now());
   r.marks.push({ t, kind, label: "" });
   r.marks.sort((a, b) => a.t - b.t);
-  save(); renderMarks();
+  save(); renderMarks(); renderDock();
   if (cur.tab === "mine") renderTab();
   toast(`${kind === "hard" ? "难点" : "书签"} ${fmt(t)}`);
 }
@@ -574,12 +578,12 @@ const ACTIONS = {
     insertAtEnd(ta, `${pre}[${fmt(now())}] `);
   },
   follow: () => { cur.follow = !cur.follow; pref.set("follow", cur.follow); renderFollow(); },
-  focus: () => { const on = !pref.get("focus", false); pref.set("focus", on); $("#study").classList.toggle("focus", on); },
+  focus: () => { const on = !pref.get("focus", false); pref.set("focus", on); $("#study").classList.toggle("focus", on); renderDock(); },
   // 随身听：画面盖住、播放器缩成一条，字幕占大部分空间。声音照常（播放器还在，只是被盖住）
   audio: () => {
     const on = !pref.get("audio", false); pref.set("audio", on);
     $("#study").classList.toggle("audio", on);
-    renderAudioBtn();
+    renderAudioBtn(); renderDock();
     setTimeout(() => highlight(now(), true), 50);
   },
   search: () => $("#subQ").focus(),
@@ -638,7 +642,7 @@ function renderSubs() {
   const q = $("#subQ").value.trim();
   const hit = (t) => (q ? esc(t).split(esc(q)).join(`<mark>${esc(q)}</mark>`) : esc(t));
   box.innerHTML = segs.map((s, i) => (!q || s.text.includes(q))
-    ? `<div class="seg${i === cur.loop ? " loop" : ""}" data-i="${i}" data-t="${s.start}"><span class="ts">${fmt(s.start)}</span><span class="tx">${hit(s.text)}</span></div>` : "").join("")
+    ? `<div class="seg${i === cur.loop ? " loop" : ""}" data-i="${i}" data-t="${s.start}"><span class="ts">${fmt(s.start)}</span><span class="tx"><span class="hl">${hit(s.text)}</span></span></div>` : "").join("")
     || `<div class="empty">没有「${esc(q)}」</div>`;
   cur.idx = -1;
 }
@@ -788,6 +792,49 @@ function renderMine(body) {
   body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { r.marks.splice(+b.dataset.del, 1); save(); renderMarks(); renderTab(); }));
 }
 
+// ---------- 专注模式：视频下方的「标记」和「AI 问答」，中间的分隔条 ----------
+const inFocus = () => !!$("#study.focus:not(.audio)");
+function renderDock() {
+  const mk = $("#fdMarks"), ak = $("#fdAsk");
+  if (!mk || !ak) return;
+  if (!inFocus()) { mk.innerHTML = ak.innerHTML = ""; if (cur.tab === "ask") renderTab(); return; }
+  // 右侧标签页此时藏着；如果它正开着「AI 问答」，先清空，免得两个输入框重复
+  if (cur.tab === "ask") $("#tabBody").innerHTML = "";
+  const r = L(cur.id);
+  mk.innerHTML = `<div class="fd-h"><b>标记</b>
+      <button class="fd-add" data-add="hard" title="不懂的地方（H）">＋ 不懂</button>
+      <button class="fd-add" data-add="mark" title="书签（B）">＋ 书签</button></div>
+    ${r.marks.length ? `<ul class="marks fd-list">${r.marks.map((m, i) => `<li>
+        <button class="tlink" data-t="${m.t}">${fmt(m.t)}</button>
+        <span class="k ${m.kind === "hard" ? "hard" : ""}">${m.kind === "hard" ? "不懂" : "书签"}</span>
+        <input class="lb" data-mi="${i}" value="${esc(m.label)}" placeholder="写一句哪里不懂…">
+        <button class="x" data-del="${i}" title="删除">删除</button></li>`).join("")}</ul>`
+      : `<div class="empty">看到不懂的地方点「＋ 不懂」（或按 <kbd>H</kbd>），会记下当前时间。<br>以后在这里、时间轴上和「我的」里都能找到。</div>`}`;
+  mk.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => addMark(b.dataset.add)));
+  mk.querySelectorAll("[data-mi]").forEach((inp) => (inp.oninput = () => { r.marks[+inp.dataset.mi].label = inp.value; save(); }));
+  mk.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { r.marks.splice(+b.dataset.del, 1); save(); renderMarks(); renderDock(); }));
+  const keep = ak.querySelector("textarea")?.value || "";
+  ak.innerHTML = `<div class="fd-h"><b>AI 问答</b><span class="muted small">会参考当前时间附近的字幕</span></div><div class="fd-ask-body"></div>`;
+  renderAsk(ak.querySelector(".fd-ask-body"), renderDock);
+  const ta = ak.querySelector("textarea"); if (ta && keep) ta.value = keep;
+}
+function initSplit() {
+  const st = $("#study"), bar = $(".fsplit");
+  if (!bar) return;
+  const setW = (p) => st.style.setProperty("--vw", p + "%");
+  setW(pref.get("focusW", 64));
+  bar.onpointerdown = (e) => {
+    e.preventDefault();
+    bar.setPointerCapture(e.pointerId);
+    st.classList.add("dragging");
+    const box = st.querySelector(".left").getBoundingClientRect();
+    let p = pref.get("focusW", 64);
+    bar.onpointermove = (ev) => { p = Math.round(Math.max(35, Math.min(80, ((ev.clientX - box.left) / box.width) * 100)) * 10) / 10; setW(p); };
+    bar.onpointerup = () => { bar.onpointermove = bar.onpointerup = null; st.classList.remove("dragging"); pref.set("focusW", p); };
+  };
+  bar.ondblclick = () => { pref.set("focusW", 64); setW(64); };
+}
+
 // ---------- AI 问答 ----------
 // S.chat[讲id].msgs = [{id, q, a, vt: 提问时视频位置, at, fav}]
 const asking = new Set(); // 正在等回答的 id（只在这次打开页面期间有效）
@@ -802,7 +849,7 @@ function qaHtml(m, i) {
       <button class="x" data-delq="${i}" title="删除">删除</button></span></div>
     <div class="qa-a md">${a}</div></div>`;
 }
-function renderAsk(body) {
+function renderAsk(body, rerender = renderTab) {
   const ch = (S.chat[cur.id] ||= { msgs: [] });
   const can = ENV.api != null;
   body.innerHTML = `<div class="chat" id="chat">${ch.msgs.length ? ch.msgs.map(qaHtml).join("")
@@ -810,17 +857,18 @@ function renderAsk(body) {
     ${can ? `<div class="ask-box"><textarea id="askQ" placeholder="输入问题。Enter 发送，Shift + Enter 换行"></textarea>
       <div class="row"><span>会参考 <b id="askT"></b> 附近的字幕</span><button class="act" id="askGo" style="margin-left:auto">提问</button></div></div>`
       : `<div class="empty">AI 问答要在电脑上开着本地服务（<code>npm start</code>）才能用；以前的问答可以照常看。</div>`}`;
-  linkLaws($("#chat"), SUBJECT_LAW[cur.lec.subject]);
-  const box = $("#chat"); box.scrollTop = box.scrollHeight;
+  const box = body.querySelector(".chat");
+  linkLaws(box, SUBJECT_LAW[cur.lec.subject]);
+  box.scrollTop = box.scrollHeight;
   body.onclick = (e) => {
     const f = e.target.closest("[data-fav]"), d = e.target.closest("[data-delq]"), r = e.target.closest("[data-retry]");
-    if (f) { const m = ch.msgs[+f.dataset.fav]; m.fav = !m.fav; save(); toast(m.fav ? "已收藏" : "已取消收藏"); renderTab(); }
-    if (d && confirm("删除这条问答？")) { ch.msgs.splice(+d.dataset.delq, 1); save(); renderTab(); }
+    if (f) { const m = ch.msgs[+f.dataset.fav]; m.fav = !m.fav; save(); toast(m.fav ? "已收藏" : "已取消收藏"); rerender(); }
+    if (d && confirm("删除这条问答？")) { ch.msgs.splice(+d.dataset.delq, 1); save(); rerender(); }
     if (r) sendAsk(ch.msgs[+r.dataset.retry]);
   };
   if (!can) return;
-  const ta = $("#askQ");
-  const showT = () => { const el = $("#askT"); if (el) el.textContent = fmt(now()); };
+  const ta = body.querySelector("textarea");
+  const showT = () => { const el = body.querySelector("#askT"); if (el) el.textContent = fmt(now()); };
   showT(); ta.onfocus = () => { showT(); if (pref.get("notePause", true) && playing()) { cur.player.pauseVideo(); cur.pausedByNote = true; } };
   const go = () => {
     const q = ta.value.trim(); if (!q) return;
@@ -828,14 +876,14 @@ function renderAsk(body) {
     ch.msgs.push(m); ta.value = ""; save();
     sendAsk(m);
   };
-  $("#askGo").onclick = go;
+  body.querySelector("#askGo").onclick = go;
   ta.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); go(); } };
 }
 async function sendAsk(m) {
   const lec = cur.id, ch = S.chat[lec];
   m = ch.msgs.find((x) => x.id === m.id) || m;
   delete m.err; asking.add(m.id);
-  const refresh = () => { if (cur?.id === lec && cur.tab === "ask") renderTab(); };
+  const refresh = () => { if (cur?.id !== lec) return; if (cur.tab === "ask" && !inFocus()) renderTab(); renderDock(); };
   refresh();
   try {
     const history = ch.msgs.filter((x) => x !== m && x.a).slice(-4).map((x) => ({ q: x.q, a: x.a }));

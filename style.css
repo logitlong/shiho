@@ -593,14 +593,40 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
 .hm-key { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; }
 .hm-key i { width: 13px; height: 13px; display: inline-block; }
 
-/* 专注模式（T）：只留视频和字幕，左视频、右字幕，各占满一屏 */
+/* 专注模式（T）：左视频 | 分隔条（可拖） | 右字幕；视频下方是「标记」和「AI 问答」 */
+.fsplit, .fdock { display: none; }
+.subs-col { display: contents; }
 .study.focus:not(.audio) { max-width: none; }
-.study.focus:not(.audio) .left { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 28px; }
-.study.focus:not(.audio) .player-area { grid-column: 1; grid-row: 1 / span 2; }
-.study.focus:not(.audio) .subs-head { grid-column: 2; grid-row: 1; margin-top: 0; }
-.study.focus:not(.audio) .subs { grid-column: 2; grid-row: 2; height: auto; min-height: 0; contain: size; font-size: 18px; line-height: 2; padding-right: 6px; }
+.study.focus:not(.audio) .left { display: grid; grid-template-columns: minmax(0, var(--vw, 64%)) 18px minmax(260px, 1fr); grid-template-rows: auto auto; }
+.study.focus:not(.audio) .player-area { grid-column: 1; grid-row: 1; }
+.study.focus:not(.audio) .fsplit { display: block; grid-column: 2; grid-row: 1 / 3; cursor: col-resize; position: relative; touch-action: none; }
+.fsplit::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 1px; background: var(--line); transition: background .15s, width .15s; }
+.fsplit::after { content: ""; position: absolute; left: 6px; top: 50%; width: 5px; height: 36px; margin-top: -18px; border-radius: 3px; background: var(--line); }
+.fsplit:hover::before, .dragging .fsplit::before { background: var(--accent); width: 2px; }
+.fsplit:hover::after, .dragging .fsplit::after { background: var(--accent); }
+.study.dragging, .study.dragging * { user-select: none; cursor: col-resize; }
+.study.dragging iframe { pointer-events: none; }
+.study.focus:not(.audio) .subs-col { display: flex; flex-direction: column; grid-column: 3; grid-row: 1 / 3; min-height: 0; }
+.study.focus:not(.audio) .subs-head { margin-top: 0; }
+.study.focus:not(.audio) .subs { flex: 1; height: auto; min-height: 0; contain: size; font-size: 18px; line-height: 2; padding-right: 6px; }
 .fs .study.focus:not(.audio) { max-width: none; }
+.study.focus:not(.audio) .fdock { display: grid; grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.fd-h { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; font-size: 13px; }
+.fd-h b { font: 600 15px var(--serif); margin-right: auto; }
+.fd-add { font-size: 13px; color: var(--muted); border: 1px solid var(--line); padding: 2px 10px; }
+.fd-add:hover { color: var(--accent); border-color: var(--accent); }
+.fd-list { max-height: 260px; overflow-y: auto; }
+.fd-list .lb { flex: 1; border: 0; background: none; color: inherit; font: inherit; outline: none; min-width: 0; }
+.fd-marks .empty, .fd-ask .empty { padding: 14px 0; font-size: 13px; }
+.fd-ask .chat { max-height: 300px; }
+.fd-ask .ask-box textarea { min-height: 54px; }
+/* 字幕当前句：每一行都画荧光笔 */
+.seg.cur .tx { background: none; }
+.seg.cur .tx .hl { background: linear-gradient(transparent 55%, var(--mark) 55%); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 @media (max-width: 900px) {
   .study.focus:not(.audio) .left { display: block; }
+  .study.focus:not(.audio) .fsplit { display: none; }
+  .study.focus:not(.audio) .subs-col { display: block; }
   .study.focus:not(.audio) .subs { contain: none; height: 45vh; }
+  .study.focus:not(.audio) .fdock { grid-template-columns: 1fr; }
 }
