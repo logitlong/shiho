@@ -1,7 +1,7 @@
 // 讲次页以外的页面：答案练习（题目 / 作答 / 批改）、全文搜索、判例索引
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=502ccd9a8a";
-import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=502ccd9a8a";
-import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=502ccd9a8a";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=4830679264";
+import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=4830679264";
+import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=4830679264";
 
 let X; // app.js 传进来的共用工具：app, $, esc, fmt, mdHtml, toast, pref, save, state(), inv(), onLeave
 export const initPages = (ctx) => (X = ctx);
@@ -436,11 +436,8 @@ const GUIDE = [
     <b>批改</b>：交卷后 AI 按 6 项（論点抽出・規範・あてはめ・結論・構成・日本語）打分，给 A〜F 评价、逐句点评、参考构成和参考答案、中文总评。看完在「复盘」里写下次要改的地方。<br>
     <b>建议</b>：先写「答案構成メモ」（10〜15 分钟）再动笔；严格计时，超时也写完，记录真实用时。</dd>
   <dt>判例</dt><dd>所有讲里出现过的判例，可以筛选；同一个判例在几讲出现过都列出来，点讲次跳到视频那个时间。</dd>
-  <dt>搜索</dt><dd>在全部字幕、笔记、论证、判例、○× 里搜一个词（例：「表見代理」「目的効果基準」），点结果直接跳到视频那个时间。</dd>
-  <dt>★ 收藏</dt><dd>右上角。三栏：收藏的 AI 问答、所有讲的书签和难点、所有讲的自己的笔记。可以按科目筛选、搜关键词，点一下回到那一讲的那个时间。考前把这里过一遍，就是自己的「不懂清单」。</dd>
-  <dt>同步</dt><dd>右上角。填 GitHub 令牌后，各设备的学习记录自动同步；也在这里重置学习进度（按科目或全部）。</dd>
-  <dt>条文</dt><dd>五部法律（憲法・民法・刑法・民訴・刑訴）的全文。左边按編・章・節的目录翻，右边连续阅读；上面的框在整部法里搜词（例：「善意の第三者」）；重要的条文点 ☆ 标星，以后点「★ 标星」集中复习；每条旁边的「讲义里」会搜出讲到这一条的讲次。</dd>
-  <dt>查条文</dt><dd>右上角输入「民法94」「憲法21条1項」「刑訴197」回车，直接看条文；弹窗里可以翻前后条。</dd>
+  <dt>搜索框</dt><dd>顶栏右边的框。输入词语回车（例：「表見代理」「目的効果基準」）= 在全部字幕、笔记、论证、判例、○× 里搜，点结果直接跳到视频那个时间；输入「民法94」「憲法21条1項」「刑訴197」回车 = 直接弹出条文。</dd>
+  <dt>右上角图标</dt><dd>从左到右：同步与设置（小圆点：绿 = 已同步，黄 = 同步中，红 = 失败）、学习指引、快捷键、夜间 / 日间、全屏。</dd>
   <dt>快捷键 <kbd>?</kbd></dt><dd>随时按 <kbd>?</kbd> 看全部快捷键。</dd>
 </dl>`],
   ["科目顺序建议（目标：2027 年 9 月 筑波 既修者）", `

@@ -3,7 +3,7 @@
 // 讲次列表在 lectures.js（从播放列表生成）。
 // 讲次 id：<科目id>-<三位讲次>，例如 kenpo-001。录入后不要改，学习记录按 id 存。
 // 入试科目：筑波大学法科大学院 既修者 = 憲法・民法・刑法・民訴・刑訴
-import { KENPO, MINPO, KAZOKU, KEIHO, MINSO, KEISO } from "./lectures.js?v=502ccd9a8a";
+import { KENPO, MINPO, KAZOKU, KEIHO, MINSO, KEISO } from "./lectures.js?v=4830679264";
 
 export const SUBJECTS = [
   { id: "kenpo", title: "憲法", zh: "宪法", playlist: "PL_VnGGDz34KSesY7KqjmNiIR3xatmU09F", raw: KENPO },

@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=502ccd9a8a";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=502ccd9a8a";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=4830679264";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=4830679264";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=502ccd9a8a";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=502ccd9a8a";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=4830679264";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=4830679264";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -62,7 +62,14 @@ async function loadInventory() { INV = await fetchInventory(); }
 function isDark() {
   return (document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
 }
-function renderThemeBtn() { $("#themeBtn").textContent = isDark() ? "日间" : "夜间"; }
+const ICON = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICONS = {
+  moon: ICON('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
+  sun: ICON('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  expand: ICON('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+  shrink: ICON('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
+};
+function renderThemeBtn() { const b = $("#themeBtn"); b.innerHTML = isDark() ? ICONS.sun : ICONS.moon; b.title = isDark() ? "切换到日间" : "切换到夜间"; }
 $("#themeBtn").onclick = () => {
   const next = isDark() ? "light" : "dark";
   document.documentElement.dataset.theme = next;
@@ -117,10 +124,11 @@ function toggleFullscreen() {
   else document.documentElement.requestFullscreen?.().catch(() => toast("浏览器不允许全屏"));
 }
 $("#fsBtn").onclick = toggleFullscreen;
+$("#fsBtn").innerHTML = ICONS.expand;
 document.addEventListener("fullscreenchange", () => {
   const on = !!document.fullscreenElement;
   document.documentElement.classList.toggle("fs", on);
-  $("#fsBtn").textContent = on ? "退出全屏" : "全屏";
+  $("#fsBtn").innerHTML = on ? ICONS.shrink : ICONS.expand; $("#fsBtn").title = on ? "退出全屏（F）" : "全屏（F）";
 });
 
 // ---------- 首页 ----------
@@ -991,15 +999,19 @@ initPages({ app, $, esc, fmt, mdHtml, toast, pref, save, today, state: () => S, 
 function renderSyncBtn() {
   const b = $("#syncBtn"); if (!b) return;
   const st = !ghCfg() ? "" : { syncing: "ing", ok: "ok", error: "err" }[sync.state] || "";
-  b.className = `txt-btn sync-btn ${st}`;
+  b.className = `tool sync-btn ${st}`;
   b.title = syncTip();
 }
 sync.onChange = () => { renderSyncBtn(); if (location.hash === "#/sync" && sync.state !== "syncing") viewSync(); };
 // 顶栏：查条文
 $("#lawQ").onkeydown = (e) => {
   if (e.key !== "Enter") return;
+  const v = e.target.value.trim(); if (!v) return;
   const def = cur ? SUBJECT_LAW[cur.lec.subject] : "321CONSTITUTION";
-  if (lookupLaw(e.target.value, def)) e.target.blur(); else toast("例：民法94、憲法21条1項、刑訴197");
+  // 「民法94」「21条1項」这种 → 条文弹窗；其他 → 全文搜索
+  if (/\d/.test(v) && lookupLaw(v, def)) { e.target.blur(); return; }
+  e.target.blur();
+  location.hash = `#/search/${encodeURIComponent(v)}/`;
 };
 await detectEnv();
 if (!ENV.local) probeLocal();

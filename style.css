@@ -477,3 +477,31 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
 .tabs { gap: 14px; }
 .tabs button { font-size: 13.5px; }
 @media (max-width: 1280px) { .tabs { gap: 11px; } .tabs button { font-size: 13px; } }
+
+/* ===== 顶栏（重新编排）：品牌 + 倒计时 | 主导航 | 搜索框 | 工具图标 ===== */
+.top { align-items: center; gap: 0; padding: 10px 20px; }
+.top .brand { margin-right: 10px; }
+.top .goal { flex: none; font-size: 12px; color: var(--faint); margin-right: 28px; padding-left: 10px; border-left: 1px solid var(--line); line-height: 1.2; }
+.top .main-nav { display: flex; gap: 22px; font-size: 14px; flex: 1; }
+.top .main-nav a { text-decoration: none; color: var(--muted); padding: 4px 0; border-bottom: 2px solid transparent; }
+.top .main-nav a:hover { color: var(--ink); }
+.top .main-nav a.on { color: var(--ink); border-bottom-color: var(--accent); }
+.qbox { display: flex; align-items: center; gap: 6px; width: 230px; padding: 4px 10px; border: 1px solid var(--line); background: var(--paper); color: var(--faint); cursor: text; }
+.qbox:focus-within { border-color: var(--muted); color: var(--muted); }
+.qbox input { flex: 1; min-width: 0; border: 0; background: none; outline: none; color: var(--ink); font: 13px var(--sans); }
+.qbox input::placeholder { color: var(--faint); }
+.tools { display: flex; align-items: center; gap: 4px; margin-left: 14px; padding-left: 10px; border-left: 1px solid var(--line); }
+.tool { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; color: var(--muted); text-decoration: none; }
+.tool:hover { color: var(--ink); background: color-mix(in srgb, var(--line) 50%, transparent); }
+.tool.sync-btn::after { right: 5px; top: 5px; }
+@media (max-width: 1100px) { .top .goal { display: none; } .qbox { width: 170px; } .top .main-nav { gap: 16px; } }
+@media (max-width: 760px) {
+  .top { flex-wrap: wrap; row-gap: 6px; }
+  .top .main-nav { order: 3; flex-basis: 100%; overflow-x: auto; }
+  .qbox { display: none; }
+  .tools { margin-left: auto; border: 0; }
+}
+.top .goal { margin-right: 0; }
+.top .top .main-nav, .top .main-nav { margin-left: 30px; }
+@media (max-width: 1100px) { .top .goal { display: inline; } .qbox { width: 190px; } }
+@media (max-width: 900px) { .top .goal { display: none; } .top .main-nav { margin-left: 18px; } }
