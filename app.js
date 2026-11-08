@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=179618f98f";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=179618f98f";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=f577329c32";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=f577329c32";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=179618f98f";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=179618f98f";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=f577329c32";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=f577329c32";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -83,6 +83,7 @@ function applyFz(v) {
   v = FZ.includes(v) ? v : 100;
   document.documentElement.style.zoom = v === 100 ? "" : v / 100;
   pref.set("fz", v);
+  setTimeout(() => typeof fitFocus === "function" && fitFocus(), 0);
   const p = $(".fz-pop"); if (p) p.querySelector("b").textContent = v + "%";
   return v;
 }
@@ -800,6 +801,7 @@ function renderDock() {
   if (!inFocus()) { mk.innerHTML = ak.innerHTML = ""; if (cur.tab === "ask") renderTab(); return; }
   // 右侧标签页此时藏着；如果它正开着「AI 问答」，先清空，免得两个输入框重复
   if (cur.tab === "ask") $("#tabBody").innerHTML = "";
+  scrollTo(0, 0); fitFocus();
   const r = L(cur.id);
   mk.innerHTML = `<div class="fd-h"><b>标记</b>
       <button class="fd-add" data-add="hard" title="不懂的地方（H）">＋ 不懂</button>
@@ -818,11 +820,22 @@ function renderDock() {
   renderAsk(ak.querySelector(".fd-ask-body"), renderDock);
   const ta = ak.querySelector("textarea"); if (ta && keep) ta.value = keep;
 }
+// 专注模式整块正好占满一屏：视频最多长到「给下面的标记 / 问答留够地方」为止
+function fitFocus() {
+  const st = $("#study"), l = st?.querySelector(".left");
+  if (!l) return;
+  const z = parseFloat(document.documentElement.style.zoom) || 1;
+  const top = l.getBoundingClientRect().top + scrollY;
+  st.style.setProperty("--fh", Math.max(460, Math.floor((innerHeight - top) / z) - 16) + "px");
+}
+addEventListener("resize", () => fitFocus());
+document.addEventListener("fullscreenchange", () => setTimeout(fitFocus, 80));
 function initSplit() {
   const st = $("#study"), bar = $(".fsplit");
   if (!bar) return;
   const setW = (p) => st.style.setProperty("--vw", p + "%");
   setW(pref.get("focusW", 64));
+  fitFocus();
   bar.onpointerdown = (e) => {
     e.preventDefault();
     bar.setPointerCapture(e.pointerId);

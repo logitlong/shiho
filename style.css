@@ -630,3 +630,20 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
   .study.focus:not(.audio) .subs { contain: none; height: 45vh; }
   .study.focus:not(.audio) .fdock { grid-template-columns: 1fr; }
 }
+/* 专注模式：整块高度 = 一屏（--fh 由 JS 算），视频按高度封顶，下面两栏填满剩下的高度、各自滚动 */
+.study.focus:not(.audio) .left { height: var(--fh, calc(100vh - 150px)); grid-template-rows: auto minmax(0, 1fr); }
+.study.focus:not(.audio) .player-area { width: min(100%, calc((var(--fh, 700px) - 290px) * 16 / 9)); justify-self: center; }
+.study.focus:not(.audio) .fdock { min-height: 0; overflow: hidden; }
+.fd-marks, .fd-ask { display: flex; flex-direction: column; min-height: 0; }
+.fd-list { flex: 1; min-height: 0; max-height: none; }
+.fd-marks .empty { overflow-y: auto; }
+.fd-ask-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.fd-ask .chat { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+.fd-ask .ask-box { flex: none; }
+.fd-ask .ask-box textarea { min-height: 44px; height: 44px; }
+@media (max-width: 900px) {
+  .study.focus:not(.audio) .left { height: auto; }
+  .study.focus:not(.audio) .player-area { width: auto; }
+  .fd-ask .chat { max-height: 300px; }
+}
+body:has(.study.focus:not(.audio)) main { padding-bottom: 0; }
