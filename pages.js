@@ -1,7 +1,7 @@
 // 讲次页以外的页面：答案练习（题目 / 作答 / 批改）、全文搜索、判例索引
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=e0f416a7d3";
-import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=e0f416a7d3";
-import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=e0f416a7d3";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=502ccd9a8a";
+import { linkLaws, SUBJECT_LAW, LAWS, loadLaw, artKeys } from "./laws.js?v=502ccd9a8a";
+import { ENV, apiUrl, loadCasesIndex } from "./store.js?v=502ccd9a8a";
 
 let X; // app.js 传进来的共用工具：app, $, esc, fmt, mdHtml, toast, pref, save, state(), inv(), onLeave
 export const initPages = (ctx) => (X = ctx);
@@ -415,7 +415,7 @@ const GUIDE = [
   <dt>时间轴</dt><dd>视频下的细线。红色竖线是书签、黄色是难点，点一下跳过去。</dd>
   <dt>进度</dt><dd>自动记住看到哪里；看到 95% 自动算学完（也可以手动点「标记学完」）。</dd>
 </dl>`],
-  ["右侧 7 个标签（按 1〜7 切换）", `
+  ["右侧 8 个标签（按 1〜8 切换）", `
 <dl class="gd">
   <dt>1 日文笔记</dt><dd>按讲义顺序整理的日文笔记，是论文考试要用的表达。标题后的时间点一下跳到视频那里。</dd>
   <dt>2 中文笔记</dt><dd>用中文从「为什么」讲起，术语保留日文并注音。第一次学一个主题时先读这个。</dd>
@@ -423,7 +423,8 @@ const GUIDE = [
   <dt>4 论证</dt><dd>论文要背的论证和定义。「默写」→ 打出来 → <kbd>⌘</kbd>+<kbd>Enter</kbd> 对照，红色是漏掉的，蓝色是多写的；然后选「没记住 / 模糊 / 记住了」，系统决定下次什么时候再出。</dd>
   <dt>5 ○×</dt><dd>短答式的正误题，按 <kbd>O</kbd> / <kbd>X</kbd> 回答，答完看解说。勾「只看错过的」专门刷错题。</dd>
   <dt>6 判例</dt><dd>本讲讲到的判例：事案、判旨、考点。所有判例汇总在顶栏「判例」。</dd>
-  <dt>7 书签与笔记</dt><dd>自己的书签列表（可以写备注）和自由笔记；笔记里写 <code>[12:34]</code> 会变成可点击的时间。</dd>
+  <dt>7 书签与笔记</dt><dd>自己的书签列表（可以写备注）和自由笔记（支持 Markdown）；笔记里写 <code>[12:34]</code> 会变成可点击的时间。</dd>
+  <dt>8 AI 问答</dt><dd>看视频时哪里不懂就问（Enter 发送）。AI 会参考你提问时视频前后的字幕和这一讲的笔记，用中文回答。好的问答点 ☆ 收藏。需要电脑上开着本地服务；回答通常 20〜60 秒。</dd>
 </dl>
 <p class="muted small">笔记、卡片、判例里出现的「憲法21条」「民法94条2項」这样的条文都有虚线，点一下弹出条文原文（e-Gov 现行法）。只写「94条」时按当前科目的法律。</p>`],
   ["顶栏的功能", `
@@ -436,6 +437,8 @@ const GUIDE = [
     <b>建议</b>：先写「答案構成メモ」（10〜15 分钟）再动笔；严格计时，超时也写完，记录真实用时。</dd>
   <dt>判例</dt><dd>所有讲里出现过的判例，可以筛选；同一个判例在几讲出现过都列出来，点讲次跳到视频那个时间。</dd>
   <dt>搜索</dt><dd>在全部字幕、笔记、论证、判例、○× 里搜一个词（例：「表見代理」「目的効果基準」），点结果直接跳到视频那个时间。</dd>
+  <dt>★ 收藏</dt><dd>右上角。三栏：收藏的 AI 问答、所有讲的书签和难点、所有讲的自己的笔记。可以按科目筛选、搜关键词，点一下回到那一讲的那个时间。考前把这里过一遍，就是自己的「不懂清单」。</dd>
+  <dt>同步</dt><dd>右上角。填 GitHub 令牌后，各设备的学习记录自动同步；也在这里重置学习进度（按科目或全部）。</dd>
   <dt>条文</dt><dd>五部法律（憲法・民法・刑法・民訴・刑訴）的全文。左边按編・章・節的目录翻，右边连续阅读；上面的框在整部法里搜词（例：「善意の第三者」）；重要的条文点 ☆ 标星，以后点「★ 标星」集中复习；每条旁边的「讲义里」会搜出讲到这一条的讲次。</dd>
   <dt>查条文</dt><dd>右上角输入「民法94」「憲法21条1項」「刑訴197」回车，直接看条文；弹窗里可以翻前后条。</dd>
   <dt>快捷键 <kbd>?</kbd></dt><dd>随时按 <kbd>?</kbd> 看全部快捷键。</dd>
@@ -552,4 +555,69 @@ export async function viewLaws(lawId, art = "") {
     $("#lread").innerHTML = `<div class="law-path">${law.name}　标星 ${ks.length} 条</div>` + (ks.map((k) => artHtml(k)).join("") || `<div class="empty">还没有。条文旁边点 ☆ 标星。</div>`);
     link();
   };
+}
+
+// =====================================================================
+// 收藏：AI 问答收藏 + 所有书签 + 所有笔记
+// =====================================================================
+export function viewFav(tab = "qa") {
+  const { app, esc, $, mdHtml, fmt } = X;
+  const S = X.state();
+  const lecName = (id) => { const l = LECTURE_BY_ID[id]; return l ? `${subjTitle(l.subject)}　第${l.n}講　${l.title}` : id; };
+  const qa = [], marks = [], notes = [];
+  for (const [id, c] of Object.entries(S.chat || {})) for (const m of c.msgs || []) if (m.fav && LECTURE_BY_ID[id]) qa.push({ ...m, lec: id });
+  for (const [id, l] of Object.entries(S.lectures || {})) {
+    if (!LECTURE_BY_ID[id]) continue;
+    for (const m of l.marks || []) marks.push({ id, ...m });
+    if (l.note?.trim()) notes.push({ id, note: l.note, at: l.t || l.at || 0 });
+  }
+  qa.sort((a, b) => b.at - a.at);
+  marks.sort((a, b) => a.id.localeCompare(b.id) || a.t - b.t);
+  notes.sort((a, b) => a.id.localeCompare(b.id));
+  const TABS = [["qa", `收藏的问答（${qa.length}）`], ["marks", `书签（${marks.length}）`], ["notes", `我的笔记（${notes.length}）`]];
+  app.innerHTML = `<div class="toc-head"><a class="link" href="#/">← 科目</a><h1>收藏</h1></div>
+    <div class="tabs fav-tabs">${TABS.map(([k, t]) => `<a href="#/fav/${k}" class="${k === tab ? "on" : ""}">${t}</a>`).join("")}</div>
+    <div class="row search-f"><select id="fs"><option value="">全部科目</option>${SUBJECTS.map((s) => `<option value="${s.id}">${s.title}</option>`).join("")}</select>
+      <input id="fq" placeholder="筛选"></div>
+    <div id="flist"></div>`;
+  const draw = () => {
+    const sj = $("#fs").value, q = $("#fq").value.trim();
+    const ok = (id, text) => (!sj || LECTURE_BY_ID[id].subject === sj) && (!q || text.includes(q));
+    let html = "";
+    if (tab === "qa") {
+      const xs = qa.filter((m) => ok(m.lec, m.q + (m.a || "")));
+      html = xs.map((m) => `<details class="fav-qa" open><summary><span class="who">问</span><b>${esc(m.q)}</b></summary>
+          <div class="fav-src"><a class="link" href="#/l/${m.lec}/${m.vt ?? ""}/ask">${esc(lecName(m.lec))}${m.vt != null ? "　" + fmt(m.vt) : ""}</a>
+            <span class="muted small">${new Date(m.at).toLocaleDateString("sv-SE")}</span>
+            <button class="link" data-unfav="${m.lec}|${m.at}">取消收藏</button></div>
+          <div class="md" data-subj="${LECTURE_BY_ID[m.lec].subject}">${mdHtml(m.a || "（没有回答）")}</div></details>`).join("")
+        || `<div class="empty">还没有。在讲次页「AI 问答」里点 ☆ 收藏。</div>`;
+    } else if (tab === "marks") {
+      const xs = marks.filter((m) => ok(m.id, m.label || ""));
+      let last = "";
+      html = xs.map((m) => { const h = m.id !== last ? `<div class="fav-lec">${esc(lecName(m.id))}</div>` : ""; last = m.id;
+        return `${h}<a class="fav-mark" href="#/l/${m.id}/${Math.floor(m.t)}"><span class="tlink">${fmt(m.t)}</span>
+          <span class="k ${m.kind === "hard" ? "hard" : ""}">${m.kind === "hard" ? "难点" : "书签"}</span><span>${esc(m.label || "")}</span></a>`; }).join("")
+        || `<div class="empty">还没有。看视频时按 <kbd>B</kbd> 加书签、<kbd>H</kbd> 标难点。</div>`;
+    } else {
+      const xs = notes.filter((n) => ok(n.id, n.note));
+      html = xs.map((n) => `<div class="fav-note"><div class="fav-lec"><a class="link" href="#/l/${n.id}//mine">${esc(lecName(n.id))}</a></div>
+          <div class="md" data-subj="${LECTURE_BY_ID[n.id].subject}" data-lec="${n.id}">${mdHtml(n.note)}</div></div>`).join("")
+        || `<div class="empty">还没有。在讲次页「书签与笔记」里写，按 <kbd>N</kbd> 插入当前时间。</div>`;
+    }
+    $("#flist").innerHTML = html;
+    $("#flist").querySelectorAll(".md[data-subj]").forEach((el) => linkLaws(el, SUBJECT_LAW[el.dataset.subj]));
+    // 笔记里的 [12:34] 时间：跳到那一讲的那个时间
+    $("#flist").querySelectorAll(".md[data-lec] .tlink").forEach((b) => b.replaceWith(Object.assign(document.createElement("a"),
+      { className: "tlink", href: `#/l/${b.closest("[data-lec]").dataset.lec}/${b.dataset.t}`, textContent: b.textContent })));
+  };
+  $("#fs").onchange = draw; $("#fq").oninput = draw;
+  $("#flist").onclick = (e) => {
+    const u = e.target.closest("[data-unfav]"); if (!u) return;
+    e.preventDefault();
+    const [id, at] = u.dataset.unfav.split("|");
+    const m = S.chat[id]?.msgs.find((x) => String(x.at) === at);
+    if (m) { m.fav = false; X.save(); viewFav(tab); }
+  };
+  draw();
 }

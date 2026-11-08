@@ -440,3 +440,40 @@ input.tok:focus { border-color: var(--accent); }
 .reset-t { max-width: 760px; margin-top: 8px; }
 .reset-t .nm2 { font-family: var(--serif-ja); font-size: 15px; width: 160px; }
 button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid currentColor; }
+
+/* AI 问答 */
+.chat { max-height: calc(100vh - 330px); overflow-y: auto; }
+.fs .chat { max-height: calc(100vh - 360px); }
+.qa { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.qa-q { display: flex; gap: 10px; align-items: baseline; }
+.qa-q .qtext { flex: 1; font-weight: 600; white-space: pre-wrap; }
+.who { flex: none; font-size: 11px; color: var(--bg); background: var(--accent); padding: 0 5px; }
+.qa-tools { display: flex; gap: 10px; align-items: baseline; flex: none; }
+.qa-tools .x { color: var(--faint); font-size: 12px; }
+.qa-tools .x:hover { color: var(--accent); }
+.star { color: var(--faint); font-size: 16px; }
+.star.on { color: var(--accent); }
+.qa-a { padding: 4px 0 0 30px; }
+.ask-box { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
+.ask-box textarea { min-height: 70px; font-family: var(--sans); font-size: 14.5px; }
+.ask-box .row { margin: 6px 0 0; }
+/* 收藏 */
+.fav-btn { color: var(--accent); text-decoration: none; }
+.fav-tabs { margin-bottom: 12px; }
+.fav-tabs a { padding: 4px 0 8px; color: var(--muted); font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; text-decoration: none; }
+.fav-tabs a.on { color: var(--ink); border-bottom-color: var(--accent); }
+.fav-qa { padding: 12px 0; border-bottom: 1px solid var(--line); max-width: 900px; }
+.fav-qa summary { cursor: pointer; display: flex; gap: 10px; align-items: baseline; list-style: none; }
+.fav-qa summary::-webkit-details-marker { display: none; }
+.fav-qa summary b { font-size: 15.5px; }
+.fav-src { display: flex; gap: 14px; align-items: baseline; padding: 4px 0 6px 30px; }
+.fav-qa .md { padding-left: 30px; }
+.fav-lec { font: 600 14.5px var(--serif-ja); margin: 16px 0 4px; }
+.fav-mark { display: flex; gap: 12px; align-items: baseline; padding: 4px 0 4px 12px; text-decoration: none; font-size: 14px; border-bottom: 1px dotted var(--line); max-width: 900px; }
+.fav-mark:hover { background: color-mix(in srgb, var(--mark) 25%, transparent); }
+.fav-mark .k { font-size: 11px; color: var(--accent); width: 30px; flex: none; }
+.fav-mark .k.hard { color: #c98a12; }
+.fav-note { max-width: 900px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.tabs { gap: 14px; }
+.tabs button { font-size: 13.5px; }
+@media (max-width: 1280px) { .tabs { gap: 11px; } .tabs button { font-size: 13px; } }

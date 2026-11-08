@@ -129,9 +129,9 @@ export async function loadCasesIndex() {
 
 // ---------- 学习记录 ----------
 // S = { lectures:{讲id:{pos,dur,done,note,marks,at}}, cards:{"讲id#i":{…}}, quiz:{"讲id#i":{…}}, drafts:{题id:{…}},
-//       lawStar:{"法令id:条":{on}}, days:{日期:秒}, resetAt, resetSubj:{科目:时间} }
+//       lawStar:{"法令id:条":{on}}, chat:{讲id:{msgs:[{id,q,a,vt,at,fav}]}}, days:{日期:秒}, resetAt, resetSubj:{科目:时间} }
 // 每条记录带修改时间 t，合并时各取较新的一份。
-const COLLS = ["lectures", "cards", "quiz", "drafts", "lawStar"];
+const COLLS = ["lectures", "cards", "quiz", "drafts", "lawStar", "chat"];
 export function norm(s) {
   s ||= {};
   for (const c of COLLS) s[c] ||= {};
@@ -154,11 +154,11 @@ const snap = new Map();
 const keyOf = (o) => { if (!o || typeof o !== "object") return JSON.stringify(o); const { t, ...rest } = o; return JSON.stringify(rest); };
 export function stampBaseline(S) {
   snap.clear();
-  for (const c of COLLS) for (const [k, v] of Object.entries(S[c])) snap.set(`${c}:${k}`, keyOf(v));
+  for (const c of COLLS) for (const [k, v] of Object.entries(S[c] || {})) snap.set(`${c}:${k}`, keyOf(v));
 }
 export function stamp(S) {
   const now = Date.now();
-  for (const c of COLLS) for (const [k, v] of Object.entries(S[c])) {
+  for (const c of COLLS) for (const [k, v] of Object.entries(S[c] || {})) {
     if (!v || typeof v !== "object") continue;
     const kk = `${c}:${k}`, j = keyOf(v);
     if (snap.get(kk) !== j) { v.t = Math.max(now, v.t || 0); snap.set(kk, j); }
@@ -207,13 +207,14 @@ export function resetState(S, subj, keepNotes) {
     for (const k of Object.keys(S[c])) if (hit(k)) delete S[c][k];
   }
   if (keepNotes) for (const [k, v] of Object.entries(KEEP)) if (hit(k)) S.lectures[k] = { ...v, pos: 0, dur: 0, done: false, t: now + 1 };
+  if (keepNotes) for (const [k, v] of Object.entries(KEEP_CHAT)) if (hit(k)) S.chat[k] = { ...v, t: now + 1 };
   if (!subj) for (const [k, v] of Object.entries(KEEP_STAR)) S.lawStar[k] = { ...v, t: now + 1 };
   return S;
 }
-let KEEP = {}, KEEP_STAR = {};
+let KEEP = {}, KEEP_STAR = {}, KEEP_CHAT = {};
 // resetState 之前先记下要保留的
 export function prepareReset(S, keepNotes) {
-  KEEP = {}; KEEP_STAR = { ...S.lawStar };
+  KEEP = {}; KEEP_STAR = { ...S.lawStar }; KEEP_CHAT = keepNotes ? JSON.parse(JSON.stringify(S.chat)) : {};
   if (keepNotes) for (const [k, v] of Object.entries(S.lectures)) if (v.note || v.marks?.length) KEEP[k] = { note: v.note || "", marks: v.marks || [] };
 }
 

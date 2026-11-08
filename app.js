@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=e0f416a7d3";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=e0f416a7d3";
-import { ENV, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=e0f416a7d3";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws } from "./pages.js?v=e0f416a7d3";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=502ccd9a8a";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=502ccd9a8a";
+import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=502ccd9a8a";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=502ccd9a8a";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -94,7 +94,7 @@ const KEYS = [
   ]],
   ["页面", [
     ["F", "全屏 开 / 关"],
-    ["1 – 7", "切换右侧标签"],
+    ["1 – 8", "切换右侧标签"],
     ["O / X", "○×题：答 ○ / 答 ×（在 ○× 标签里）"],
     ["0", "导图一键归位（也可以双击空白处）"],
     ["/", "搜索字幕"],
@@ -255,7 +255,7 @@ function mdHtml(text) {
   return DOMPurify.sanitize(marked.parse(withTs));
 }
 
-const TABS = [["ja", "日文笔记"], ["zh", "中文笔记"], ["map", "导图"], ["cards", "论证"], ["quiz", "○×"], ["cases", "判例"], ["mine", "书签与笔记"]];
+const TABS = [["ja", "日文笔记"], ["zh", "中文笔记"], ["map", "导图"], ["cards", "论证"], ["quiz", "○×"], ["cases", "判例"], ["mine", "书签与笔记"], ["ask", "AI 问答"]];
 
 async function viewLecture(id, startT, startTab) {
   const lec = LECTURE_BY_ID[id];
@@ -503,7 +503,7 @@ document.addEventListener("keydown", (e) => {
   if (!cur?.player) return;
   if (e.shiftKey && e.key === "ArrowLeft") { e.preventDefault(); return ACTIONS.prevLec(); }
   if (e.shiftKey && e.key === "ArrowRight") { e.preventDefault(); return ACTIONS.nextLec(); }
-  if (/^[1-7]$/.test(e.key)) return setTab(TABS[+e.key - 1][0]);
+  if (/^[1-8]$/.test(e.key)) return setTab(TABS[+e.key - 1][0]);
   if (cur.tab === "quiz" && /^[oOxX]$/.test(e.key)) { e.preventDefault(); return cur.quizAnswer?.(/^[oO]$/.test(e.key)); }
   if (e.key === "0" && cur.tab === "map") return cur.mapHome?.();
   const act = KEYMAP[e.key.length === 1 ? e.key.toLowerCase() : e.key];
@@ -584,6 +584,7 @@ function renderTab() {
       : none;
   } else if (t === "quiz") renderQuiz(body);
   else if (t === "mine") renderMine(body);
+  else if (t === "ask") renderAsk(body);
   if (t !== "map" && t !== "mine") linkLaws(body, SUBJECT_LAW[cur.lec.subject]);
 }
 
@@ -670,6 +671,66 @@ function renderMine(body) {
   $("#notePause").onchange = (e) => pref.set("notePause", e.target.checked);
   body.querySelectorAll("[data-mi]").forEach((inp) => (inp.oninput = () => { r.marks[+inp.dataset.mi].label = inp.value; save(); }));
   body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { r.marks.splice(+b.dataset.del, 1); save(); renderMarks(); renderTab(); }));
+}
+
+// ---------- AI 问答 ----------
+// S.chat[讲id].msgs = [{id, q, a, vt: 提问时视频位置, at, fav}]
+const asking = new Set(); // 正在等回答的 id（只在这次打开页面期间有效）
+function qaHtml(m, i) {
+  const a = m.a ? mdHtml(m.a)
+    : asking.has(m.id) ? `<span class="muted">思考中…（Codex，通常 20〜60 秒）</span>`
+    : `<span class="muted">${m.err ? `失败：${esc(m.err)}` : "没有收到回答"}</span> <button class="act" data-retry="${i}">重试</button>`;
+  return `<div class="qa" data-mi="${i}">
+    <div class="qa-q"><span class="who">问</span><div class="qtext">${esc(m.q)}</div>
+      <span class="qa-tools">${m.vt != null ? `<button class="tlink" data-t="${m.vt}">${fmt(m.vt)}</button>` : ""}
+      <button class="star ${m.fav ? "on" : ""}" data-fav="${i}" title="收藏（集中在顶栏「收藏」）">${m.fav ? "★" : "☆"}</button>
+      <button class="x" data-delq="${i}" title="删除">删除</button></span></div>
+    <div class="qa-a md">${a}</div></div>`;
+}
+function renderAsk(body) {
+  const ch = (S.chat[cur.id] ||= { msgs: [] });
+  const can = ENV.api != null;
+  body.innerHTML = `<div class="chat" id="chat">${ch.msgs.length ? ch.msgs.map(qaHtml).join("")
+      : `<div class="empty">看视频时哪里不懂就问。提问时视频前后的字幕和这一讲的笔记会一起交给 AI，回答用中文。<br>点 ☆ 收藏，收藏的问答集中在顶栏「收藏」。</div>`}</div>
+    ${can ? `<div class="ask-box"><textarea id="askQ" placeholder="输入问题。Enter 发送，Shift + Enter 换行"></textarea>
+      <div class="row"><span>会参考 <b id="askT"></b> 附近的字幕</span><button class="act" id="askGo" style="margin-left:auto">提问</button></div></div>`
+      : `<div class="empty">AI 问答要在电脑上开着本地服务（<code>npm start</code>）才能用；以前的问答可以照常看。</div>`}`;
+  linkLaws($("#chat"), SUBJECT_LAW[cur.lec.subject]);
+  const box = $("#chat"); box.scrollTop = box.scrollHeight;
+  body.onclick = (e) => {
+    const f = e.target.closest("[data-fav]"), d = e.target.closest("[data-delq]"), r = e.target.closest("[data-retry]");
+    if (f) { const m = ch.msgs[+f.dataset.fav]; m.fav = !m.fav; save(); toast(m.fav ? "已收藏" : "已取消收藏"); renderTab(); }
+    if (d && confirm("删除这条问答？")) { ch.msgs.splice(+d.dataset.delq, 1); save(); renderTab(); }
+    if (r) sendAsk(ch.msgs[+r.dataset.retry]);
+  };
+  if (!can) return;
+  const ta = $("#askQ");
+  const showT = () => { const el = $("#askT"); if (el) el.textContent = fmt(now()); };
+  showT(); ta.onfocus = () => { showT(); if (pref.get("notePause", true) && playing()) { cur.player.pauseVideo(); cur.pausedByNote = true; } };
+  const go = () => {
+    const q = ta.value.trim(); if (!q) return;
+    const m = { id: Date.now(), q, vt: Math.floor(now()), at: Date.now(), a: "" };
+    ch.msgs.push(m); ta.value = ""; save();
+    sendAsk(m);
+  };
+  $("#askGo").onclick = go;
+  ta.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); go(); } };
+}
+async function sendAsk(m) {
+  const lec = cur.id, ch = S.chat[lec];
+  m = ch.msgs.find((x) => x.id === m.id) || m;
+  delete m.err; asking.add(m.id);
+  const refresh = () => { if (cur?.id === lec && cur.tab === "ask") renderTab(); };
+  refresh();
+  try {
+    const history = ch.msgs.filter((x) => x !== m && x.a).slice(-4).map((x) => ({ q: x.q, a: x.a }));
+    const r = await fetch(apiUrl("/api/ask"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lecture: lec, t: m.vt, q: m.q, history }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.a) throw new Error(d.error || r.status);
+    // 等回答的时候同步可能换掉了 S，按 id 找回这一条再写
+    (S.chat[lec]?.msgs.find((x) => x.id === m.id) || m).a = d.a;
+  } catch (e) { (S.chat[lec]?.msgs.find((x) => x.id === m.id) || m).err = String(e.message || e); }
+  asking.delete(m.id); save(); refresh();
 }
 
 // ---------- 论证卡片：打字默写 + 间隔复习 ----------
@@ -855,7 +916,7 @@ function viewSync() {
 
     <div class="section-t">重置学习进度（重学）</div>
     <p class="small muted">清空看到哪里、学完标记、论证卡片的复习计划、○× 做题记录${c ? "，所有设备一起清空" : ""}。笔记、导图等内容不受影响；学习热力图保留；答案练习的作答记录保留。</p>
-    <label class="small"><input type="checkbox" id="keepNotes" checked> 保留我的书签和自己写的笔记</label>
+    <label class="small"><input type="checkbox" id="keepNotes" checked> 保留我的书签、自己写的笔记和 AI 问答</label>
     <table class="list-table reset-t">${SUBJECTS.map((s) => { const b = bySubj(s.id); return `<tr><td class="nm2">${s.title}</td>
       <td class="num">看过 ${b.lec} 讲 · 学完 ${b.done} · 论证 ${b.cards} · ○× ${b.quiz}</td>
       <td class="num"><button class="danger" data-reset="${s.id}">重置${s.title}</button></td></tr>`; }).join("")}
@@ -914,6 +975,7 @@ function route() {
   if (r === "guide") return viewGuide();
   if (r === "laws") return viewLaws(id, a2);
   if (r === "sync") return viewSync();
+  if (r === "fav") return viewFav(id || "qa");
   if (["practice", "p", "a", "search"].includes(r) && ENV.api == null) return viewNeedLocal(r === "search" ? "搜索" : "答案练习");
   return viewHome();
 }
