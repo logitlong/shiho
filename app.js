@@ -1,8 +1,8 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=f577329c32";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=f577329c32";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=2aa43c52b7";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=2aa43c52b7";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=f577329c32";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=f577329c32";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=2aa43c52b7";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=2aa43c52b7";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -296,10 +296,10 @@ function heatHtml() {
   return `<section class="hm-sec">
     <div class="hm-head"><div class="section-t">学习记录<span class="muted small" style="font-weight:400;letter-spacing:0;margin-left:12px">${first.toLocaleDateString("sv-SE")} 开始 → ${exam > today0 ? `${cfg().exam} 考试` : "今天"}</span></div>
       <div class="hm-stat"><span><b>${Math.round(week / 60)}</b> 分钟<small>本周</small></span><span><b>${active}</b> / ${since} 天<small>开始以来学过的天数</small></span><span><b>${hrs(total)}</b> 小时<small>累计</small></span>${days > 0 ? `<span><b>${days}</b> 天<small>离考试</small></span>` : ""}</div></div>
-    <div class="hm" style="grid-template-columns:18px repeat(${wk + 1}, minmax(0, 1fr))">
+    <div class="hm-scroll"><div class="hm" style="--wk:${wk + 1};grid-template-columns:18px repeat(${wk + 1}, minmax(0, 1fr))">
       <span class="hm-w" style="grid-area:3/1">一</span><span class="hm-w" style="grid-area:5/1">三</span><span class="hm-w" style="grid-area:7/1">五</span>
       ${out.join("")}
-    </div>
+    </div></div>
     <div class="heat-legend"><span class="hm-key"><i class="fut"></i> 还没到</span><span class="hm-key"><i class="exam"></i> 考试</span><span style="margin-left:14px">少</span> <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> 多</div>
   </section>`;
 }

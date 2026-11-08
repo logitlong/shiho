@@ -548,9 +548,6 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
 .heat-legend i.l4 { background: var(--accent); }
 @media (max-width: 960px) {
   .today { grid-template-columns: 1fr; gap: 10px; }
-  .subj-row { grid-template-columns: minmax(0, 1fr) 90px 24px; }
-  .subj-row .meter { grid-column: 1 / -1; order: 5; }
-  .subj-row .num:nth-of-type(2) { display: none; }
 }
 /* 字号调节 */
 .fz-wrap { position: relative; display: inline-flex; }
@@ -647,3 +644,79 @@ button.danger { color: var(--accent); font-size: 13px; border-bottom: 1px solid 
   .fd-ask .chat { max-height: 300px; }
 }
 body:has(.study.focus:not(.audio)) main { padding-bottom: 0; }
+
+/* ===================== 手机 / 窄屏适配 ===================== */
+/* 首页科目行：窄屏两行（名字 · 讲数 · → / 进度条） */
+@media (max-width: 960px) {
+  .subj-row { grid-template-columns: minmax(0, 1fr) auto auto 16px; grid-template-areas: "nm n1 n2 go" "mt mt mt mt"; row-gap: 8px; column-gap: 12px; padding: 13px 4px; }
+  .subj-row .nm { grid-area: nm; }
+  .subj-row .meter { grid-area: mt; order: 0; }
+  .subj-row .num:nth-child(3) { grid-area: n1; }
+  .subj-row .num:nth-child(4) { grid-area: n2; display: block; }
+  .subj-row .go { grid-area: go; }
+}
+@media (max-width: 640px) {
+  main { padding: 12px 16px 48px; }
+  h1 { font-size: 23px; }
+  /* 手机上 iOS 输入框小于 16px 会自动放大页面 */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* 顶栏：第一行 品牌 + 工具；第二行 导航 + 搜索（点放大镜展开成整行） */
+  .top { position: relative; flex-wrap: wrap; row-gap: 4px; padding: 8px 12px 0; }
+  .top .brand { order: 1; margin-right: auto; }
+  .tools { order: 2; margin-left: 0; padding-left: 0; border: 0; gap: 0; }
+  .tool { width: 34px; height: 34px; }
+  #helpBtn, #fsBtn { display: none; }
+  .top .main-nav { order: 3; flex: 0 0 calc(100% - 40px); min-width: 0; margin-left: 0 !important; gap: 18px; font-size: 14.5px; }
+  .top .main-nav a { padding: 8px 0; }
+  .qbox { order: 4; display: flex; width: 36px; height: 36px; padding: 0; justify-content: center; border: 0; background: none; color: var(--muted); }
+  .qbox input { width: 0; flex: 0; padding: 0; }
+  .qbox:focus-within { position: absolute; left: 12px; right: 12px; bottom: 2px; width: auto; height: 38px; padding: 0 10px; justify-content: flex-start; border: 1px solid var(--muted); background: var(--paper); z-index: 20; }
+  .qbox:focus-within input { flex: 1; width: auto; }
+  .fz-pop { position: fixed; right: 12px; top: 52px; }
+  .set-pop { width: min(300px, calc(100vw - 24px)); }
+
+  /* 各页标题行：「← 返回」单独一行，标题不被挤成竖排 */
+  .toc-head { flex-wrap: wrap; row-gap: 2px; column-gap: 12px; }
+  .toc-head > .link:first-child { flex-basis: 100%; }
+  .toc-head h1 { white-space: nowrap; }
+  .law-tabs { flex-basis: 100%; overflow-x: auto; white-space: nowrap; scrollbar-width: none; padding: 4px 0 2px; gap: 20px; font-size: 15px; }
+  .law-tabs a { flex: none; }
+  .lec-head { gap: 4px 14px; margin-bottom: 10px; }
+  .lec-head h1 { order: 5; flex-basis: 100%; min-width: 0; font-size: 21px; line-height: 1.4; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar, .law-tabs::-webkit-scrollbar, .top .main-nav::-webkit-scrollbar { display: none; }
+
+  /* 首页 */
+  .today { gap: 18px; padding-bottom: 20px; }
+  .tg-num b { font-size: 46px; }
+  .tg-sub { font-size: 13.5px; }
+  .todo { gap: 10px; padding: 11px 4px; }
+  .todo .k { width: 40px; }
+  .todo .t { font-size: 15px; }
+  .todo .m { display: none; }
+  .hm-head { display: block; }
+  .hm-head .section-t span { display: block; margin: 2px 0 0 !important; }
+  .hm-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; padding: 4px 0 12px; }
+  .hm-stat span { white-space: nowrap; }
+  .hm-stat b { font-size: 20px; }
+  .hm-scroll { overflow-x: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+  .hm-scroll .hm { grid-template-columns: 16px repeat(var(--wk), 12px) !important; width: max-content; gap: 3px; }
+  .heat-legend { flex-wrap: wrap; justify-content: flex-start; row-gap: 4px; }
+  .heat-legend .hm-key:first-child { margin-left: 0; }
+  .subj-row .nm { font-size: 17px; }
+  .subj-row .num { font-size: 12px; }
+
+  /* 同步与设置：重置表格改成一行一行的卡片 */
+  .reset-t, .reset-t tbody { display: block; }
+  .reset-t tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .reset-t td { border: 0 !important; padding: 0 !important; }
+  .reset-t .nm2 { width: auto; }
+  .reset-t td:last-child { margin-left: auto; }
+  .kv td:first-child { white-space: nowrap; padding-right: 12px; vertical-align: top; }
+
+  /* 判例索引：讲次链接靠左换行 */
+  .case-i summary, .case-row { flex-wrap: wrap; }
+  /* 弹窗 */
+  .law-box { width: calc(100vw - 20px); max-height: calc(100vh - 40px); }
+}
