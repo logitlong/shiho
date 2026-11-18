@@ -1,9 +1,9 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=d03f1755ea";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=d03f1755ea";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=74c6de99e1";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=74c6de99e1";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=d03f1755ea";
-import { viewExam } from "./exam.js?v=d03f1755ea";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=d03f1755ea";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=74c6de99e1";
+import { viewExam } from "./exam.js?v=74c6de99e1";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=74c6de99e1";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
