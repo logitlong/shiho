@@ -1,8 +1,9 @@
-import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=2aa43c52b7";
-import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=2aa43c52b7";
+import { SUBJECTS, LECTURE_BY_ID, SUBJECT_BY_ID } from "./toc.js?v=d03f1755ea";
+import { linkLaws, lookupLaw, SUBJECT_LAW } from "./laws.js?v=d03f1755ea";
 import { ENV, apiUrl, detectEnv, probeLocal, ghCfg, setGhCfg, testToken, clearContentCache, loadInventory as fetchInventory, loadLecture,
-  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=2aa43c52b7";
-import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=2aa43c52b7";
+  loadLocalState, writeLocalState, stamp, stampBaseline, sync, syncNow, prepareReset, resetState, norm as normState } from "./store.js?v=d03f1755ea";
+import { viewExam } from "./exam.js?v=d03f1755ea";
+import { initPages, viewPractice, viewProblem, viewAnswer, viewSearch, viewCases, viewGuide, viewLaws, viewFav } from "./pages.js?v=d03f1755ea";
 
 const $ = (s, el = document) => el.querySelector(s);
 const app = $("#app");
@@ -1149,6 +1150,7 @@ function route() {
   if (r === "search") return viewSearch(decodeURIComponent(id || ""), a2 || "");
   if (r === "cases") return viewCases();
   if (r === "guide") return viewGuide();
+  if (r === "exam") return viewExam({ app });
   if (r === "laws") return viewLaws(id, a2);
   if (r === "sync") return viewSync();
   if (r === "fav") return viewFav(id || "qa");

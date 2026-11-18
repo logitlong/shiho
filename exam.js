@@ -1,0 +1,198 @@
+// 考试介绍：司法試験予備試験 + 司法試験（流程・科目・形式・时间・报名・费用）
+// 数据来源：法务省「令和８年司法試験（予備試験）に関するＱ＆Ａ」及受験案内（2026-11 核对）。
+// 令和９年（2027）日程来自司法試験委員会决定的二手整理，报名前务必再看法务省原文。
+
+const LINK = {
+  yobiQA: "https://www.moj.go.jp/jinji/shihoushiken/jinji07_00210.html",
+  shihoQA: "https://www.moj.go.jp/jinji/shihoushiken/shiken_shinshihou_shikenqa.html",
+  yobiGuide: "https://www.moj.go.jp/content/001457048.pdf",
+  shihoGuide: "https://www.moj.go.jp/content/001456594.pdf",
+  myna: "https://myna.go.jp/",
+};
+const a = (href, text) => `<a class="link" href="${href}" target="_blank" rel="noopener">${text} ↗</a>`;
+
+const SECTIONS = [
+  ["一图看懂：两条路", `
+<p>在日本当律师・法官・检察官，必须通过<b>司法試験</b>，再去司法研修所修习约 1 年（司法修習），通过「二回試験」后才拿到法曹资格。参加司法試験的资格只有两种来源：</p>
+<div class="ex-route">
+  <div class="ex-lane">
+    <div class="ex-tag">A 法科大学院路线 <span class="muted">（你现在走的）</span></div>
+    <ol class="ex-flow">
+      <li>法科大学院入试<small>筑波：既修者 2027 年 9 月</small></li>
+      <li>入学（既修 2 年）<small>2028 年 4 月</small></li>
+      <li>最终学年「在学中受験」<small>最早 2029 年 7 月</small></li>
+      <li>或修了后受验<small>修了后 5 年内</small></li>
+    </ol>
+  </div>
+  <div class="ex-lane">
+    <div class="ex-tag">B 予備試験路线 <span class="muted">（不限学历・年龄）</span></div>
+    <ol class="ex-flow">
+      <li>短答式<small>7 月</small></li>
+      <li>論文式<small>9 月</small></li>
+      <li>口述<small>次年 1 月</small></li>
+      <li>最终合格<small>次年 2 月 → 当年 7 月可考司法試験</small></li>
+    </ol>
+  </div>
+</div>
+<ol class="ex-flow ex-final">
+  <li>司法試験<small>7 月，4 天，短答＋論文同时考</small></li>
+  <li>合格发表<small>11 月</small></li>
+  <li>司法修習<small>约 1 年</small></li>
+  <li>二回試験 → 法曹</li>
+</ol>
+<p class="muted small">两条路可以并行：读法科大学院期间也可以报予備試験，先拿到哪个资格就用哪个。</p>`],
+
+  ["予備試験：概要", `
+<dl class="gd">
+  <dt>是什么</dt><dd>给不经过法科大学院的人开的「同等资格」考试。合格后，从合格后的第一个 4 月 1 日起 <b>5 年内</b>可以考司法試験。</dd>
+  <dt>报考资格</dt><dd><b>没有任何限制</b>（学历、年龄、国籍、次数都不限）。没有科目免除；去年论文合格今年也要从短答重新考。</dd>
+  <dt>三个阶段</dt><dd>短答式（选择题）→ 論文式（论述）→ 口述（面试式口头考），前一阶段合格才能进下一阶段。</dd>
+  <dt>难度</dt><dd>最终合格率常年只有 <b>约 3〜4%</b>（报名 1.5 万人左右，最终合格 400〜500 人）。短答合格率约 20%，论文约 20%，口述约 95%。</dd>
+</dl>`],
+
+  ["予備試験：科目・形式・时间", `
+<h3>① 短答式（7 月中旬・周日・1 天）</h3>
+<p>纸笔<b>马克卡（マークシート）</b>，B/HB 铅笔。试场：札幌・仙台・东京・名古屋・大阪・广岛・福冈及周边。</p>
+<table class="ex-table">
+  <thead><tr><th>时段</th><th>科目</th><th>时间</th><th>配点</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>憲法・行政法</td><td>1 小时</td><td>各 30 = 60</td></tr>
+    <tr><td>2</td><td>民法・商法・民事訴訟法</td><td>1 小时 30 分</td><td>各 30 = 90</td></tr>
+    <tr><td>3</td><td>刑法・刑事訴訟法</td><td>1 小时</td><td>各 30 = 60</td></tr>
+    <tr><td>4</td><td>一般教養科目（约 40 题选 20 题作答）</td><td>1 小时 30 分</td><td>60</td></tr>
+    <tr class="sum"><td></td><td>合计</td><td>5 小时</td><td>270</td></tr>
+  </tbody>
+</table>
+
+<h3>② 論文式（9 月・周六日・2 天）— <span class="ex-new">CBT 机考</span></h3>
+<p>2026 年起在 CBT 考场用电脑作答（会场备有 PC；原则上每个都道府县都设考场）。每科 50 分，满分 500。</p>
+<table class="ex-table">
+  <thead><tr><th>科目</th><th>问题数</th><th>时间</th><th>配点</th></tr></thead>
+  <tbody>
+    <tr><td>憲法・行政法</td><td>各 1 问</td><td>2 小时 20 分</td><td>100</td></tr>
+    <tr><td>民法・商法・民事訴訟法</td><td>各 1 问</td><td>3 小时 30 分</td><td>150</td></tr>
+    <tr><td>刑法・刑事訴訟法</td><td>各 1 问</td><td>2 小时 20 分</td><td>100</td></tr>
+    <tr><td>選択科目（8 选 1）</td><td>1 问</td><td>1 小时 10 分</td><td>50</td></tr>
+    <tr><td>法律実務基礎科目（民事・刑事）</td><td>各 1 问</td><td>3 小时</td><td>100</td></tr>
+    <tr class="sum"><td>合计</td><td>10 问</td><td></td><td>500</td></tr>
+  </tbody>
+</table>
+<p class="muted small">选择科目：倒産法・租税法・経済法・知的財産法・労働法・環境法・国際関係法（公法系）・国際関係法（私法系）。</p>
+
+<h3>③ 口述（次年 1 月下旬・周六日・东京）</h3>
+<p>法律実務基礎科目 <b>民事</b>・<b>刑事</b> 各一天，考官当面提问、口头回答（每科十几分钟）。只带「受験票兼日程通知書」。最终合格率在口述阶段很高（约 95%），但不要掉以轻心。</p>`],
+
+  ["司法試験：概要", `
+<dl class="gd">
+  <dt>报考资格</dt><dd>三选一：<br>① <b>法科大学院修了</b>（修了后第一个 4/1 起 5 年内）<br>② <b>予備試験合格</b>（合格后第一个 4/1 起 5 年内）<br>③ <b>在学中受験</b>：法科大学院最终学年、修完规定学分并取得学长认定，可在毕业前参加（2023 年起）。</dd>
+  <dt>次数限制</dt><dd>每个资格对应 <b>5 年</b>的受验期间（期间内次数不限）。用某个资格考过之后，在它的期间内不能换用另一个资格。</dd>
+  <dt>形式</dt><dd><b>短答＋論文同一时期考，所有人两种都要考</b>。2026 年起<b>全部 CBT 机考</b>（短答也是电脑作答）。</dd>
+  <dt>合格率</dt><dd>近年约 <b>40〜45%</b>（受验者 4,000 人左右，合格 1,600〜1,800 人）。予備試験合格者的合格率在 90% 前后。</dd>
+</dl>`],
+
+  ["司法試験：科目・形式・时间", `
+<p>7 月中旬，共 4 天（中间一天休息），原则上各都道府县设 CBT 考场。</p>
+<table class="ex-table">
+  <thead><tr><th>日</th><th>科目</th><th>时间</th><th>配点</th></tr></thead>
+  <tbody>
+    <tr><td>第 1 天（周三）</td><td>論文：選択科目 / 公法系 第1问（憲法）/ 公法系 第2问（行政法）</td><td>3h / 2h / 2h</td><td>100 / 100 / 100</td></tr>
+    <tr><td>第 2 天（周四）</td><td>論文：民事系 第1〜3问（民法・商法・民訴，有时融合出题）</td><td>各 2h</td><td>各 100</td></tr>
+    <tr class="rest"><td>（周五）</td><td>休息日</td><td></td><td></td></tr>
+    <tr><td>第 3 天（周六）</td><td>論文：刑事系 第1问（刑法）/ 第2问（刑訴）</td><td>各 2h</td><td>各 100</td></tr>
+    <tr><td>第 4 天（周日）</td><td>短答：憲法 / 民法 / 刑法</td><td>50 分 / 75 分 / 50 分</td><td>50 / 75 / 50</td></tr>
+  </tbody>
+</table>
+<dl class="gd">
+  <dt>满分</dt><dd>短答 175 分，論文 800 分。</dd>
+  <dt>合格判定</dt><dd>① 短答：各科达到 40% 且总分超过合格线，论文才会被评分；<br>② 論文：各科达到 25%（最低线）；<br>③ 总合评价 = 短答得分 ＋ 論文得分 × 1,400/800，超过合格线即合格。</dd>
+  <dt>答题量</dt><dd>CBT 每页 23 行 × 30 字；必修科目每问最多 8 页，选择科目 4 页。</dd>
+  <dt>出题法令</dt><dd>原则上以当年 1 月 1 日施行的法令为准。考场发纸质「司法試験用法文」（不能画线），屏幕上也能看。</dd>
+</dl>`],
+
+  ["日程表（2026 实绩・2027 预定）", `
+<h3>予備試験</h3>
+<table class="ex-table">
+  <thead><tr><th></th><th>令和 8 年（2026）实绩</th><th>令和 9 年（2027）预定</th></tr></thead>
+  <tbody>
+    <tr><td>电子报名</td><td>2/16 〜 3/13</td><td><b>2/15 〜 3/12</b></td></tr>
+    <tr><td>邮寄报名</td><td>3/2 〜 3/13（邮戳有效）</td><td>3/1 〜 3/12</td></tr>
+    <tr><td>短答式</td><td>7/19（日）</td><td><b>7/18（日）</b></td></tr>
+    <tr><td>短答合格发表</td><td>8/6</td><td>8 月上旬</td></tr>
+    <tr><td>論文式</td><td>9/12・13（土日）</td><td><b>9/11・12（土日）</b></td></tr>
+    <tr><td>論文合格发表</td><td>12/17</td><td>12 月中旬</td></tr>
+    <tr><td>口述</td><td>2027/1/23・24</td><td><b>2028/1/22・23</b></td></tr>
+    <tr><td>最终合格发表</td><td>2027/2/4</td><td>2028 年 2 月上旬</td></tr>
+  </tbody>
+</table>
+<h3>司法試験</h3>
+<table class="ex-table">
+  <thead><tr><th></th><th>令和 8 年（2026）实绩</th><th>令和 9 年（2027）预定</th></tr></thead>
+  <tbody>
+    <tr><td>电子报名</td><td>3/9 〜 4/2</td><td><b>3/8 〜 4/1</b></td></tr>
+    <tr><td>邮寄报名</td><td>3/19 〜 4/2（邮戳有效）</td><td>3/18 〜 4/1</td></tr>
+    <tr><td>考试</td><td>7/15・16・18・19</td><td><b>7/14・15・17・18</b></td></tr>
+    <tr><td>短答成绩发表</td><td>8/6</td><td>8 月上旬</td></tr>
+    <tr><td>合格发表</td><td>11/11</td><td>11 月中旬</td></tr>
+  </tbody>
+</table>
+<p class="muted small">2027 年的数字来自司法試験委員会的日程决定（经第三方整理），正式以法务省公告为准。</p>`],
+
+  ["报名方法・费用", `
+<table class="ex-table">
+  <thead><tr><th></th><th>予備試験</th><th>司法試験</th></tr></thead>
+  <tbody>
+    <tr><td>电子报名（マイナポータル）</td><td><b>20,000 日元</b></td><td><b>31,000 日元</b></td></tr>
+    <tr><td>邮寄报名（收入印紙）</td><td>21,000 日元</td><td>32,000 日元</td></tr>
+  </tbody>
+</table>
+<dl class="gd">
+  <dt>电子报名</dt><dd>2026 年起通过 ${a(LINK.myna, "マイナポータル")} 报名。需要<b>电子证明书有效的マイナンバーカード</b>＋手机 App（或 IC 读卡器）。照片只收 .jpg。<br>缴费用 Pay-easy（国庫金キャッシュレスサービス KOKO PASS），<b>交完费才算报名完成</b>；临近截止时最后一天 23:59 前必须付清。</dd>
+  <dt>邮寄报名</dt><dd>先向司法試験委員会邮寄申请领取「受験願書」（法务省窗口不再发放），自备角形 2 号信封，贴收入印紙（不要盖消印，最多 4 张）。比电子报名贵 1,000 日元、准考证也来得慢。</dd>
+  <dt>准考证</dt><dd>电子报名在マイナポータル下载，<b>必须打印成纸</b>带去；手机画面不行。</dd>
+  <dt>退费</dt><dd>无论是否参加考试，一律不退。</dd>
+  <dt>没有マイナンバーカード？</dt><dd>在留外国人也能办（在留カード＋住民登录）。从申请到拿卡通常要 1 个月左右，<b>最晚 1 月就去办</b>。</dd>
+</dl>`],
+
+  ["CBT 机考须知", `
+<ul>
+  <li>考场电脑：Windows 11、23 英寸以上屏幕、JIS 日文键盘、<b>Microsoft IME</b>（有学习功能，<b>没有预测变换</b>）。</li>
+  <li>可用快捷键：复制 / 粘贴 / 剪切 / 撤销 / 全选 / 重做、Ctrl+Home / End。没有缩进、没有禁则处理；半角自动转全角，大部分符号打不出来（⑴、ⅰ 等可以）。</li>
+  <li>问题文<b>不发纸质</b>，只在屏幕上看；法文有纸质版。每个时段发一张 A3 对折草稿纸，用会场的自动铅笔。</li>
+  <li>答案自动保存，时间到自动回收，<b>不能提前交卷离场</b>。答错答题栏 = 0 分（要自己复制粘贴过去）；隔行书写可能被判无效。</li>
+  <li>只能带：准考证、带照片的身份证件原件、去掉标签的透明瓶装水（≤1L）、手帕、纸巾、口罩、眼镜、耳塞（无金属）、药。<b>手表也不能带</b>，时间看屏幕。</li>
+  <li>每天都要在「受付終了時刻」前签到，迟到 = 当天之后全部不能考。</li>
+  <li>练习：法务省网站上有「司法試験等 CBT システム（体験版）」，建议提前用它练打字速度（司法試験每问上限 8 页 ≈ 5,500 字）。</li>
+</ul>`],
+
+  ["对你的时间线", `
+<ol class="steps">
+  <li><b>现在 → 2027 年 9 月</b>：五科（憲・民・刑・民訴・刑訴）准备筑波既修者入试 —— 这正是本站的主线。</li>
+  <li><b>可选：2027 年 7 月 18 日 予備試験短答</b>：报名 2/15〜3/12，2 万日元。当作「模拟考」检验七科的基础知识，不过关也不影响入试。</li>
+  <li><b>2028 年 4 月</b>：入学（既修 2 年制）。行政法・商法・实务科目和选择科目在 LS 里补齐。</li>
+  <li><b>2029 年 7 月</b>：二年级在学中受験（需修完规定学分并取得认定），报名大约在 2029 年 3 月。</li>
+  <li><b>2029 年 11 月</b>合格 → 2030 年 3 月修了 → 司法修習。</li>
+</ol>
+<p class="muted small">选择科目建议早定（常见：労働法・倒産法・経済法），LS 一年级就开始准备。</p>`],
+
+  ["官方链接", `
+<ul>
+  <li>${a(LINK.yobiQA, "法務省：司法試験予備試験に関するＱ＆Ａ")}</li>
+  <li>${a(LINK.yobiGuide, "令和８年司法試験予備試験受験案内（PDF）")}</li>
+  <li>${a(LINK.shihoQA, "法務省：司法試験に関するＱ＆Ａ")}</li>
+  <li>${a(LINK.shihoGuide, "令和８年司法試験受験案内（PDF）")}</li>
+  <li>${a(LINK.myna, "マイナポータル（电子报名入口）")}</li>
+</ul>
+<p class="muted small">每年 12 月前后法务省公布下一年的「受験案内」和问答，报名前以新版本为准。本页内容核对于 2026 年 11 月。</p>`],
+];
+
+export function viewExam({ app }) {
+  app.innerHTML = `<div class="toc-head"><a class="link" href="#/">← 科目</a><h1>考试介绍</h1><span class="muted small">予備試験・司法試験</span></div>
+    <div class="guide exam">
+      <nav class="g-toc">${SECTIONS.map(([t], i) => `<a href="javascript:void 0" data-g="${i}">${t}</a>`).join("")}</nav>
+      <div class="g-body">${SECTIONS.map(([t, h], i) => `<section id="g${i}"><h2>${t}</h2>${h}</section>`).join("")}</div>
+    </div>`;
+  app.querySelector(".g-toc").onclick = (e) => {
+    const i = e.target.closest("[data-g]")?.dataset.g;
+    if (i) document.getElementById(`g${i}`).scrollIntoView({ behavior: "smooth" });
+  };
+}

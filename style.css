@@ -720,3 +720,24 @@ body:has(.study.focus:not(.audio)) main { padding-bottom: 0; }
   /* 弹窗 */
   .law-box { width: calc(100vw - 20px); max-height: calc(100vh - 40px); }
 }
+
+/* 考试介绍 */
+.exam h3 { font: 600 16px var(--serif); margin: 18px 0 8px; }
+.exam .g-body section > h3:first-child { margin-top: 0; }
+.ex-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 6px 0 10px; }
+.ex-table th, .ex-table td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ex-table th { font-weight: 600; color: var(--muted); font-size: 13px; }
+.ex-table td:first-child { white-space: nowrap; }
+.ex-table tr.sum td { font-weight: 600; border-bottom: none; }
+.ex-table tr.rest td { color: var(--faint); }
+.ex-new { font: 600 12px var(--sans); color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; vertical-align: 2px; }
+.ex-route { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; }
+.ex-lane { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.ex-tag { font: 600 14.5px var(--serif); margin-bottom: 8px; }
+.ex-flow { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: f; }
+.ex-flow li { position: relative; padding-left: 26px; font-size: 14px; line-height: 1.6; counter-increment: f; }
+.ex-flow li::before { content: counter(f); position: absolute; left: 0; top: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: var(--paper); font: 600 11px/18px var(--sans); text-align: center; }
+.ex-flow li small { display: block; color: var(--muted); font-size: 12.5px; }
+.ex-final { flex-direction: row; flex-wrap: wrap; gap: 6px 22px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 8px; }
+@media (max-width: 960px) { .ex-route { grid-template-columns: 1fr; } .ex-table { display: block; overflow-x: auto; } }
